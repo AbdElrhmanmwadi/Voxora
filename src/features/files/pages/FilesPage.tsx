@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useFilesStore } from '../store/useFilesStore'
 import AppCard from '../../../core/components/AppCard'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
+import Button from '../../../core/ui/Button'
+import Input from '../../../core/ui/Input'
 
 export default function FilesPage() {
   const { projectId } = useParams()
@@ -18,12 +20,12 @@ export default function FilesPage() {
     <div className="page-container">
       <h2 className="text-2xl font-mono neon-text-blue mb-4">Files — Project {projectId}</h2>
       <AppCard title="Upload File">
-        <input type="file" accept=".txt,.pdf,.docx,.csv,.html,.xlsx" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} className="input-dark input-focus-blue" />
+        <Input type="file" accept=".txt,.pdf,.docx,.csv,.html,.xlsx" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} className="input-dark input-focus-blue" />
         {selected && <div className="mt-2 font-mono">Selected: {selected.name}</div>}
         <div className="mt-3">
-          <button disabled={!selected || isUploading} onClick={() => selected && uploadFile(projectId || '', selected)} className="btn-neon-blue mr-2 opacity-100 disabled:opacity-50">
+          <Button onClick={() => selected && uploadFile(projectId || '', selected)} disabled={!selected || isUploading}>
             {isUploading ? <><LoadingSpinner size={4} /> Uploading</> : 'Upload'}
-          </button>
+          </Button>
         </div>
       </AppCard>
 
@@ -40,11 +42,9 @@ export default function FilesPage() {
               <label className="flex items-center"><input type="checkbox" checked={doReset} onChange={(e) => setDoReset(e.target.checked)} className="mr-2" /> do_reset</label>
             </div>
           )}
-            <div className="mt-3">
-            <button disabled={!fileId || isProcessing} onClick={() => processFile(projectId || '', { file_id: fileId || '', chunk_size: chunkSize, overlap_size: overlap, do_reset: doReset })} className="btn-neon-purple mr-2 disabled:opacity-50">
-              {isProcessing ? <><LoadingSpinner size={4} /> Processing</> : 'Process'}
-            </button>
-            <button disabled={isIndexing} onClick={() => pushIndex(projectId || '', doReset)} className="btn-neon-green disabled:opacity-50">{isIndexing ? 'Indexing...' : 'Index'}</button>
+            <div className="mt-3 flex items-center gap-3">
+            <Button onClick={() => processFile(projectId || '', { file_id: fileId || '', chunk_size: chunkSize, overlap_size: overlap, do_reset: doReset })} disabled={!fileId || isProcessing}>{isProcessing ? <><LoadingSpinner size={4} /> Processing</> : 'Process'}</Button>
+            <Button onClick={() => pushIndex(projectId || '', doReset)} disabled={isIndexing} variant="ghost">{isIndexing ? 'Indexing...' : 'Index'}</Button>
           </div>
         </AppCard>
       </div>
