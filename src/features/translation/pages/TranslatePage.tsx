@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslationStore } from '../store/useTranslationStore'
 import AppCard from '../../../core/components/AppCard'
+import Button from '../../../core/ui/Button'
+import Input from '../../../core/ui/Input'
 
 export default function TranslatePage() {
   const { projectId } = useParams()
@@ -15,20 +17,20 @@ export default function TranslatePage() {
       <h2 className="text-2xl font-mono neon-text-orange mb-4">Translate — Project {projectId}</h2>
       <AppCard>
         <label className="text-sm uppercase tracking-wider text-[hsl(var(--muted-foreground))]">File ID</label>
-        <input value={fileId} onChange={(e) => setFileId(e.target.value)} className="input-dark input-focus-orange mb-2" />
+        <Input value={fileId} onChange={(e) => setFileId(e.target.value)} className="mb-2" />
         <div className="grid grid-cols-2 gap-2 mb-2">
           <div>
             <label className="text-sm">Source</label>
-            <input value={source} onChange={(e) => setSource(e.target.value)} className="input-dark" />
+            <Input value={source} onChange={(e) => setSource(e.target.value)} />
           </div>
           <div>
             <label className="text-sm">Target</label>
-            <input value={target} onChange={(e) => setTarget(e.target.value)} className="input-dark" />
+            <Input value={target} onChange={(e) => setTarget(e.target.value)} />
           </div>
         </div>
-        <div>
-          <button disabled={creating} onClick={() => createJob(projectId || '', fileId, source, target)} className="btn-neon-orange mr-2 disabled:opacity-50">{creating ? 'Creating...' : 'Translate'}</button>
-          <button disabled={!jobId || checking} onClick={() => jobId && checkStatus(jobId)} className="btn-neon-blue disabled:opacity-50">Check Status</button>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => createJob(projectId || '', fileId, source, target)} disabled={creating} className="button-smooth">{creating ? 'Creating...' : 'Translate'}</Button>
+          <Button onClick={() => jobId && checkStatus(jobId)} disabled={!jobId || checking} variant="ghost">Check Status</Button>
         </div>
       </AppCard>
 
