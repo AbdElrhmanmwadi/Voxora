@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import useAudioRecorder from '../hooks/useAudioRecorder'
 import { useVoiceStore } from '../store/useVoiceStore'
 import AppCard from '../../../core/components/AppCard'
+import Button from '../../../core/ui/Button'
+import LoadingSpinner from '../../../core/components/LoadingSpinner'
 
 export default function VoicePage() {
   const { projectId } = useParams()
@@ -21,9 +23,9 @@ export default function VoicePage() {
     <div className="page-container">
       <h2 className="text-2xl font-mono neon-text-purple mb-4">Voice — Project {projectId}</h2>
       <AppCard>
-        <div className="space-x-2">
-          <button onClick={() => start()} disabled={recording} className={`btn-neon-purple ${recording ? 'opacity-50' : ''}`}>Record</button>
-          <button onClick={handleStop} disabled={!recording} className={`btn-neon-red ${!recording ? 'opacity-50' : ''}`}>Stop</button>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => start()} disabled={recording}>{recording ? 'Recording...' : 'Record'}</Button>
+          <Button onClick={handleStop} disabled={!recording} variant="ghost">{!recording ? 'Stop' : <><LoadingSpinner size={4} /> Stop</>}</Button>
         </div>
         {lastBlobUrl && <audio src={lastBlobUrl} controls className="mt-3 w-full" />}
       </AppCard>
