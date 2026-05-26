@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useRagStore } from '../store/useRagStore'
 import AppCard from '../../../core/components/AppCard'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
+import Button from '../../../core/ui/Button'
+import Input from '../../../core/ui/Input'
 
 export default function AskPage() {
   const { projectId } = useParams()
@@ -16,10 +18,14 @@ export default function AskPage() {
       <AppCard>
         <label className="block mb-2 text-sm uppercase tracking-wider text-[hsl(var(--muted-foreground))]">Question</label>
         <textarea value={text} onChange={(e) => setText(e.target.value)} className="input-dark input-focus-green w-full h-28 p-3 rounded" />
-        <div className="mt-2">Limit: <input type="number" value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="input-dark inline-block w-20 ml-2" /></div>
-        <div className="mt-3">
-          <button disabled={loading} onClick={() => search(projectId || '', text, limit)} className="btn-neon-green mr-2">{loading ? <><LoadingSpinner size={4}/> Searching</> : 'Search'}</button>
-          <button disabled={loading} onClick={() => ask(projectId || '', text, limit)} className="btn-neon-green">{loading ? 'Asking...' : 'Ask'}</button>
+        <div className="mt-2">Limit: <Input type="number" value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="inline-block w-24 ml-2" /></div>
+        <div className="mt-3 flex items-center gap-3">
+          <Button onClick={() => search(projectId || '', text, limit)} disabled={loading} className="button-smooth">
+            {loading ? <><LoadingSpinner size={4} /> Searching</> : 'Search'}
+          </Button>
+          <Button onClick={() => ask(projectId || '', text, limit)} disabled={loading} variant="ghost">
+            {loading ? 'Asking...' : 'Ask'}
+          </Button>
         </div>
       </AppCard>
 
