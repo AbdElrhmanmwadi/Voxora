@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Card from '../../../core/ui/Card'
+import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
 import Input from '../../../core/ui/Input'
 import Button from '../../../core/ui/Button'
+import Badge from '../../../core/ui/Badge'
 
 export default function ProjectsPage() {
   const [projectId, setProjectId] = useState('')
@@ -26,35 +27,66 @@ export default function ProjectsPage() {
 
   return (
     <div className="page-container">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold">Voxora AI — Workspace</h1>
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">Access projects, chat, translation, and voice tools.</p>
+      <div className="page-header">
+        <div>
+          <p className="page-kicker">Workspace</p>
+          <h1 className="page-title">Open a knowledge project</h1>
+          <p className="page-description">Jump into project files, retrieval, translation, and voice workflows from a single operational workspace.</p>
+        </div>
+        <Badge variant="secondary">Local session</Badge>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card>
-          <div className="space-y-3">
-            <label className="block text-sm font-medium">Project ID</label>
-            <Input value={projectId} onChange={(e) => setProjectId(e.target.value)} placeholder="Enter numeric project id" />
-            {error && <div className="text-red-500 text-sm">{error}</div>}
-            <div className="pt-2">
-              <Button onClick={open}>Open Project</Button>
+          <CardHeader>
+            <CardTitle>Project access</CardTitle>
+            <CardDescription>Enter a numeric project ID to load its dashboard without changing existing API behavior.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <div className="space-y-2">
+                <label className="field-label" htmlFor="project-id">Project ID</label>
+                <Input
+                  id="project-id"
+                  inputMode="numeric"
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && open()}
+                  placeholder="e.g. 1024"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'project-error' : undefined}
+                />
+                {error && <p id="project-error" className="text-sm font-medium text-destructive">{error}</p>}
+              </div>
+              <Button onClick={open} className="w-full sm:w-auto">Open project</Button>
             </div>
-          </div>
+          </CardContent>
         </Card>
 
         <Card>
-          <div>
-            <h3 className="text-base font-medium mb-2">Recent Projects</h3>
-            <ul className="space-y-2">
-              {recent.length === 0 && <li className="text-[hsl(var(--muted-foreground))]">No recent projects</li>}
-              {recent.map((r) => (
-                <li key={r}>
-                  <button onClick={() => nav(`/projects/${r}`)} className="w-full text-left glass p-3 hover:scale-105 transition-transform">{r}</button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <CardHeader>
+            <CardTitle>Recent projects</CardTitle>
+            <CardDescription>Stored in this browser for quick access.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recent.length === 0 ? (
+              <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No recent projects yet.</div>
+            ) : (
+              <ul className="space-y-2">
+                {recent.map((r) => (
+                  <li key={r}>
+                    <button
+                      onClick={() => nav(`/projects/${r}`)}
+                      className="flex w-full items-center justify-between rounded-md border bg-background px-3 py-3 text-left text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <span className="font-medium">Project {r}</span>
+                      <span className="text-xs text-muted-foreground">Open</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>

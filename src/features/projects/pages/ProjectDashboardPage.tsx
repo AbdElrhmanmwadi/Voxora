@@ -1,33 +1,49 @@
 import React from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import Card from '../../../core/ui/Card'
+import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
+import Badge from '../../../core/ui/Badge'
+
+const tools = [
+  { path: 'files', title: 'Files', description: 'Upload source assets, process chunks, and push indexes.' },
+  { path: 'ask', title: 'Ask AI', description: 'Search indexed content and generate grounded answers.' },
+  { path: 'translate', title: 'Translation', description: 'Create translation jobs and track output files.' },
+  { path: 'voice', title: 'Voice', description: 'Record audio, transcribe, and ask from speech.' }
+]
 
 export default function ProjectDashboardPage() {
   const { projectId } = useParams()
   const nav = useNavigate()
+
   return (
     <div className="page-container">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-semibold">Project — {projectId}</h1>
+      <div className="page-header">
+        <div>
+          <p className="page-kicker">Project overview</p>
+          <h1 className="page-title">Project {projectId}</h1>
+          <p className="page-description">Manage the document pipeline from ingestion through retrieval, translation, and voice interaction.</p>
+        </div>
+        <Badge variant="outline">ID {projectId}</Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="cursor-pointer hover:scale-105 transition-transform" onClick={() => nav(`files`)}>
-          <h3 className="font-semibold">Files</h3>
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">Upload and process assets</p>
-        </Card>
-
-        <Card className="cursor-pointer hover:scale-105 transition-transform" onClick={() => nav(`ask`)}>
-          <h3 className="font-semibold">Ask AI</h3>
-        </Card>
-
-        <Card className="cursor-pointer hover:scale-105 transition-transform" onClick={() => nav(`translate`)}>
-          <h3 className="font-semibold">Translation</h3>
-        </Card>
-
-        <Card className="cursor-pointer hover:scale-105 transition-transform" onClick={() => nav(`voice`)}>
-          <h3 className="font-semibold">Voice</h3>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {tools.map((tool) => (
+          <Card
+            key={tool.path}
+            role="button"
+            tabIndex={0}
+            className="cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => nav(tool.path)}
+            onKeyDown={(event) => event.key === 'Enter' && nav(tool.path)}
+          >
+            <CardHeader>
+              <CardTitle>{tool.title}</CardTitle>
+              <CardDescription>{tool.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <span className="text-sm font-medium">Open workflow</span>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )
