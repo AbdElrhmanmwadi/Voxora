@@ -1,20 +1,28 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import Logo from '../ui/Logo'
+import Button from '../ui/Button'
+import Badge from '../ui/Badge'
 
 export default function Header() {
   return (
-    <header className="border-b border-white/6 bg-[rgba(255,255,255,0.02)] backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-3">
+    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div className="mx-auto w-full max-w-[1536px] px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-4">
+          <Link to="/" className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Logo />
-            <span className="text-lg font-semibold tracking-tight">Voxora AI</span>
+            <div className="min-w-0">
+              <span className="block truncate text-sm font-semibold tracking-tight sm:text-base">Voxora AI</span>
+              <span className="hidden text-xs text-muted-foreground sm:block">Knowledge operations workspace</span>
+            </div>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <button className="px-3 py-1.5 rounded-md bg-white/6 hover:bg-white/8 text-sm">Upgrade</button>
-            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-sm">ME</div>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Badge variant="secondary" className="hidden sm:inline-flex">Beta</Badge>
+            <Button size="sm" variant="outline">Upgrade</Button>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border bg-card text-xs font-semibold shadow-sm" aria-label="Current user">
+              ME
+            </div>
           </div>
         </div>
       </div>
