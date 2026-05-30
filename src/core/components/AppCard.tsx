@@ -1,5 +1,5 @@
 import React from 'react'
-import Card from '../ui/Card'
+import Card, { CardContent, CardHeader, CardTitle } from '../ui/Card'
 
 type Props = {
   title?: string
@@ -10,8 +10,12 @@ type Props = {
 export default function AppCard({ title, children, className = '' }: Props) {
   return (
     <Card className={className}>
-      {title && <h3 className="text-lg font-semibold mb-3">{title}</h3>}
-      <div>{children}</div>
+      {title && (
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent className={!title ? 'pt-5 sm:pt-6' : ''}>{children}</CardContent>
     </Card>
   )
 }

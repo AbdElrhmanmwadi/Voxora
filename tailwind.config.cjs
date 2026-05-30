@@ -5,32 +5,56 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        neon: {
-          blue: '#00f0ff',
-          green: '#39ff14',
-          orange: '#ff6a00',
-          purple: '#bf00ff',
-          red: '#ff003c'
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))'
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))'
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))'
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))'
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))'
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))'
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))'
         }
       },
       boxShadow: {
-        'neon-blue': '0 0 10px #00f0ff, 0 0 30px #00f0ff33',
-        'neon-green': '0 0 10px #39ff14, 0 0 30px #39ff1433',
-        'neon-orange': '0 0 10px #ff6a00, 0 0 30px #ff6a0033',
-        'neon-purple': '0 0 10px #bf00ff, 0 0 30px #bf00ff33',
-        'neon-red': '0 0 10px #ff003c, 0 0 30px #ff003c33'
+        sm: '0 1px 2px rgba(15, 23, 42, 0.05)',
+        md: '0 12px 28px rgba(15, 23, 42, 0.08)',
+        lg: '0 24px 48px rgba(15, 23, 42, 0.1)'
       },
       fontFamily: {
-        mono: ['"JetBrains Mono"', 'monospace'],
-        sans: ['"Inter"', 'sans-serif']
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace']
       },
       animation: {
-        'pulse-neon': 'pulse 1.5s cubic-bezier(0.4,0,0.6,1) infinite',
-        'fade-in': 'fadeIn 0.3s ease-in-out'
+        'fade-in': 'fadeIn 0.24s ease-out',
+        'pulse-soft': 'pulse 1.8s cubic-bezier(0.4,0,0.6,1) infinite'
       },
       keyframes: {
         fadeIn: {
-          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '0%': { opacity: '0', transform: 'translateY(6px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' }
         }
       }

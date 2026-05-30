@@ -1,14 +1,27 @@
 import React from 'react'
+import { cn } from '../utils/cn'
 
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'primary' | 'ghost'
+  variant?: 'default' | 'secondary' | 'ghost' | 'outline' | 'destructive'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
 }
 
-export default function Button({ variant = 'primary', className = '', ...props }: Props) {
-  const base = 'px-4 py-2 rounded-md text-sm font-medium transition-shadow'
+export default function Button({ variant = 'default', size = 'default', className = '', ...props }: Props) {
+  const base =
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50'
   const variants: Record<string, string> = {
-    primary: 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:shadow-md',
-    ghost: 'bg-transparent text-[hsl(var(--foreground))] hover:bg-white/4'
+    default: 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+    ghost: 'hover:bg-accent hover:text-accent-foreground',
+    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
   }
-  return <button className={`${base} ${variants[variant]} ${className}`} {...props} />
+  const sizes: Record<string, string> = {
+    default: 'h-10 px-4 py-2',
+    sm: 'h-9 rounded-md px-3',
+    lg: 'h-11 rounded-md px-6',
+    icon: 'h-10 w-10'
+  }
+
+  return <button className={cn(base, variants[variant], sizes[size], className)} {...props} />
 }
