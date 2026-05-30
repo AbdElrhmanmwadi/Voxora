@@ -4,6 +4,9 @@ import { useTranslationStore } from '../store/useTranslationStore'
 import AppCard from '../../../core/components/AppCard'
 import Button from '../../../core/ui/Button'
 import Input from '../../../core/ui/Input'
+import Badge from '../../../core/ui/Badge'
+import LoadingSpinner from '../../../core/components/LoadingSpinner'
+import StatusBadge from '../../../core/components/StatusBadge'
 
 export default function TranslatePage() {
   const { projectId } = useParams()
@@ -14,32 +17,61 @@ export default function TranslatePage() {
 
   return (
     <div className="page-container">
-      <h2 className="text-2xl font-mono neon-text-orange mb-4">Translate — Project {projectId}</h2>
-      <AppCard>
-        <label className="text-sm uppercase tracking-wider text-[hsl(var(--muted-foreground))]">File ID</label>
-        <Input value={fileId} onChange={(e) => setFileId(e.target.value)} className="mb-2" />
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div>
-            <label className="text-sm">Source</label>
-            <Input value={source} onChange={(e) => setSource(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-sm">Target</label>
-            <Input value={target} onChange={(e) => setTarget(e.target.value)} />
-          </div>
+      <div className="page-header">
+        <div>
+          <p className="page-kicker">Translation</p>
+          <h1 className="page-title">Translate project content</h1>
+          <p className="page-description">Create translation jobs from uploaded files and monitor their result file IDs.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button onClick={() => createJob(projectId || '', fileId, source, target)} disabled={creating} className="button-smooth">{creating ? 'Creating...' : 'Translate'}</Button>
-          <Button onClick={() => jobId && checkStatus(jobId)} disabled={!jobId || checking} variant="ghost">Check Status</Button>
-        </div>
-      </AppCard>
+        <StatusBadge status={status ? 'success' : jobId ? 'loading' : 'idle'} />
+      </div>
 
-      <div className="mt-4">
-        <AppCard title="Status">
-          {error && <div className="text-neon-red">{error}</div>}
-          <div className="font-mono">Job ID: {jobId ?? '—'}</div>
-          <div>Status: {status ?? '—'}</div>
-          <div>Result File ID: {resultFileId ?? '—'}</div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <AppCard title="Create job">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="field-label" htmlFor="file-id">File ID</label>
+              <Input id="file-id" value={fileId} onChange={(e) => setFileId(e.target.value)} placeholder="Paste an uploaded file ID" />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="field-label" htmlFor="source-lang">Source language</label>
+                <Input id="source-lang" value={source} onChange={(e) => setSource(e.target.value)} placeholder="en" />
+              </div>
+              <div className="space-y-2">
+                <label className="field-label" htmlFor="target-lang">Target language</label>
+                <Input id="target-lang" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="es" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button onClick={() => createJob(projectId || '', fileId, source, target)} disabled={creating || !fileId.trim()}>
+                {creating ? <><LoadingSpinner size={4} /> Creating</> : 'Create translation'}
+              </Button>
+              <Button onClick={() => jobId && checkStatus(jobId)} disabled={!jobId || checking} variant="outline">
+                {checking ? <><LoadingSpinner size={4} /> Checking</> : 'Check status'}
+              </Button>
+            </div>
+          </div>
+        </AppCard>
+
+        <AppCard title="Job status">
+          <div className="space-y-4">
+            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+                <span className="text-muted-foreground">Job ID</span>
+                <code className="break-all text-right font-mono text-xs">{jobId ?? 'Not created'}</code>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+                <span className="text-muted-foreground">Status</span>
+                <Badge variant={status ? 'success' : 'secondary'}>{status ?? 'Waiting'}</Badge>
+              </div>
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+                <span className="text-muted-foreground">Result file</span>
+                <code className="break-all text-right font-mono text-xs">{resultFileId ?? 'Not available'}</code>
+              </div>
+            </div>
+          </div>
         </AppCard>
       </div>
     </div>
