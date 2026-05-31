@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom'
 import Logo from '../ui/Logo'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
+import { useAuth } from '../auth/AuthContext'
 
 export default function Header() {
+  const { logout } = useAuth()
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="mx-auto w-full max-w-[1536px] px-4 sm:px-6 lg:px-8">
@@ -20,6 +23,7 @@ export default function Header() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <Badge variant="secondary" className="hidden sm:inline-flex">Beta</Badge>
             <Button size="sm" variant="outline">Upgrade</Button>
+            <Button size="sm" variant="ghost" onClick={logout}>Logout</Button>
             <div className="flex h-9 w-9 items-center justify-center rounded-full border bg-card text-xs font-semibold shadow-sm" aria-label="Current user">
               ME
             </div>
