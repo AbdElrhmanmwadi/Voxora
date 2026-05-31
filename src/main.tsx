@@ -3,9 +3,14 @@ import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import router from './router'
 import './index.css'
+import { AuthProvider } from './core/auth/AuthContext'
 
 function Main() {
-  return <RouterProvider router={router} />
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  )
 }
 
 createRoot(document.getElementById('root')!).render(

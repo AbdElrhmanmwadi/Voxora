@@ -7,14 +7,29 @@ import AskPage from './features/rag/pages/AskPage'
 import TranslatePage from './features/translation/pages/TranslatePage'
 import VoicePage from './features/voice/pages/VoicePage'
 import AppShell from './core/layout/AppShell'
+import ProtectedRoute from './core/auth/ProtectedRoute'
+import LoginPage from './features/auth/pages/LoginPage'
+import RegisterPage from './features/auth/pages/RegisterPage'
+import VerifyEmailPage from './features/auth/pages/VerifyEmailPage'
+
+function protectedPage(page: React.ReactNode) {
+  return (
+    <ProtectedRoute>
+      <AppShell>{page}</AppShell>
+    </ProtectedRoute>
+  )
+}
 
 const router = createBrowserRouter([
-  { path: '/', element: <AppShell><ProjectsPage /></AppShell> },
-  { path: '/projects/:projectId', element: <AppShell><ProjectDashboardPage /></AppShell> },
-  { path: '/projects/:projectId/files', element: <AppShell><FilesPage /></AppShell> },
-  { path: '/projects/:projectId/ask', element: <AppShell><AskPage /></AppShell> },
-  { path: '/projects/:projectId/translate', element: <AppShell><TranslatePage /></AppShell> },
-  { path: '/projects/:projectId/voice', element: <AppShell><VoicePage /></AppShell> }
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { path: '/auth/verify-email', element: <VerifyEmailPage /> },
+  { path: '/', element: protectedPage(<ProjectsPage />) },
+  { path: '/projects/:projectId', element: protectedPage(<ProjectDashboardPage />) },
+  { path: '/projects/:projectId/files', element: protectedPage(<FilesPage />) },
+  { path: '/projects/:projectId/ask', element: protectedPage(<AskPage />) },
+  { path: '/projects/:projectId/translate', element: protectedPage(<TranslatePage />) },
+  { path: '/projects/:projectId/voice', element: protectedPage(<VoicePage />) }
 ])
 
 export default router
