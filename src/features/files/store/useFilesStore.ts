@@ -2,6 +2,7 @@ import create from 'zustand'
 import type { UploadResponse, ProcessResponse } from '../../../types/api.types'
 import * as api from '../api/filesApi'
 import { extractError } from '../../../core/api/apiException'
+import { saveProjectFileId } from '../fileIdStorage'
 
 interface ProcessOptions {
   file_id: string
@@ -12,6 +13,7 @@ interface ProcessOptions {
 
 interface FilesState {
   fileId: string | null
+  fileProjectId: string | null
   isUploading: boolean
   isProcessing: boolean
   isIndexing: boolean
@@ -24,6 +26,7 @@ interface FilesState {
 
 export const useFilesStore = create<FilesState>((set, get) => ({
   fileId: null,
+  fileProjectId: null,
   isUploading: false,
   isProcessing: false,
   isIndexing: false,
@@ -33,7 +36,8 @@ export const useFilesStore = create<FilesState>((set, get) => ({
     set({ isUploading: true, error: null })
     try {
       const res: UploadResponse = await api.uploadFile(projectId, file)
-      set({ fileId: res.file_id, logs: [JSON.stringify(res), ...get().logs] })
+      saveProjectFileId(projectId, res.file_id)
+      set({ fileId: res.file_id, fileProjectId: projectId, logs: [JSON.stringify(res), ...get().logs] })
     } catch (e) {
       set({ error: extractError(e as unknown), logs: [String(e), ...get().logs] })
     } finally {

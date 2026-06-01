@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useFilesStore } from '../store/useFilesStore'
 import AppCard from '../../../core/components/AppCard'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
@@ -56,6 +56,14 @@ export default function FilesPage() {
                 <span className="text-sm text-muted-foreground">Current file ID</span>
                 <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{fileId ?? 'No file uploaded'}</code>
               </div>
+              {fileId && (
+                <Link
+                  to={`/projects/${projectId}/translate?fileId=${encodeURIComponent(fileId)}`}
+                  className="inline-block text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                >
+                  Translate this file →
+                </Link>
+              )}
 
               <Button variant="outline" size="sm" onClick={() => setShowAdvanced((s) => !s)}>
                 {showAdvanced ? 'Hide advanced options' : 'Show advanced options'}
