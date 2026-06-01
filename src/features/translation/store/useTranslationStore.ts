@@ -2,44 +2,81 @@ import create from 'zustand'
 import * as api from '../api/translationApi'
 import { extractError } from '../../../core/api/apiException'
 
+const jobStorageKey = (projectId: string) => `rag:translationJob:${projectId}`
+
+export function persistTranslationJob(projectId: string, jobId: string, status: string) {
+  try {
+    sessionStorage.setItem(jobStorageKey(projectId), JSON.stringify({ jobId, status, savedAt: Date.now() }))
+  } catch {
+    // ignore
+  }
+}
+
+export function readPersistedJob(projectId: string): { jobId: string; status: string } | null {
+  try {
+    const raw = sessionStorage.getItem(jobStorageKey(projectId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { jobId?: string; status?: string }
+    if (!parsed.jobId) return null
+    return { jobId: parsed.jobId, status: parsed.status ?? 'processing' }
+  } catch {
+    return null
+  }
+}
+
 interface TranslationState {
   jobId: string | null
   status: string | null
   resultFileId?: string | null
+  jobErrorMessage: string | null
   error: string | null
   creating: boolean
   checking: boolean
   createJob: (projectId: string, fileId: string, source: string, target: string) => Promise<void>
-  checkStatus: (jobId: string) => Promise<void>
+  checkStatus: (jobId: string, options?: { silent?: boolean }) => Promise<void>
+  restoreJob: (projectId: string) => void
 }
 
 export const useTranslationStore = create<TranslationState>((set, get) => ({
   jobId: null,
   status: null,
   resultFileId: null,
+  jobErrorMessage: null,
   error: null,
   creating: false,
   checking: false,
   createJob: async (projectId, fileId, source, target) => {
-    set({ creating: true, error: null })
+    set({ creating: true, error: null, jobErrorMessage: null })
     try {
       const res = await api.createTranslation(projectId, fileId, source, target)
-      set({ jobId: res.job_id, status: res.status })
+      set({ jobId: res.job_id, status: res.status, resultFileId: null })
+      persistTranslationJob(projectId, res.job_id, res.status)
     } catch (e) {
       set({ error: extractError(e as unknown) })
     } finally {
       set({ creating: false })
     }
   },
-  checkStatus: async (jobId) => {
-    set({ checking: true, error: null })
+  checkStatus: async (jobId, options) => {
+    const silent = options?.silent ?? false
+    if (!silent) set({ checking: true, error: null })
     try {
       const res = await api.getTranslationStatus(jobId)
-      set({ status: res.job.status, resultFileId: res.job.result_file_id })
+      set({
+        status: res.job.status,
+        resultFileId: res.job.result_file_id ?? null,
+        jobErrorMessage: res.job.error_message ?? null
+      })
     } catch (e) {
-      set({ error: extractError(e as unknown) })
+      if (!silent) set({ error: extractError(e as unknown) })
     } finally {
-      set({ checking: false })
+      if (!silent) set({ checking: false })
     }
+  },
+  restoreJob: (projectId) => {
+    const saved = readPersistedJob(projectId)
+    if (!saved) return
+    set({ jobId: saved.jobId, status: saved.status })
+    void get().checkStatus(saved.jobId, { silent: true })
   }
 }))

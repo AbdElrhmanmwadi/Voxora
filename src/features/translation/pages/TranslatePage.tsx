@@ -1,19 +1,144 @@
-import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useTranslationStore } from '../store/useTranslationStore'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { persistTranslationJob, useTranslationStore } from '../store/useTranslationStore'
+import { downloadTranslation } from '../api/translationApi'
+import { getProjectFileId } from '../../files/fileIdStorage'
+import { useFilesStore } from '../../files/store/useFilesStore'
+import { ApiClientError } from '../../../core/api/axiosClient'
 import AppCard from '../../../core/components/AppCard'
 import Button from '../../../core/ui/Button'
 import Input from '../../../core/ui/Input'
 import Badge from '../../../core/ui/Badge'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import StatusBadge from '../../../core/components/StatusBadge'
+import { cn } from '../../../core/utils/cn'
+
+const LANG_OPTIONS = [
+  { value: 'en', label: 'English (en)' },
+  { value: 'ar', label: 'Arabic (ar)' }
+] as const
+
+type LangCode = (typeof LANG_OPTIONS)[number]['value']
+
+const selectClassName =
+  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
+
+function resolveFileId(
+  projectId: string,
+  urlFileId: string | null,
+  storeFileId: string | null,
+  storeProjectId: string | null
+): string {
+  if (urlFileId?.trim()) return urlFileId.trim()
+  if (storeFileId && storeProjectId === projectId) return storeFileId
+  return getProjectFileId(projectId) ?? ''
+}
+
+function isInProgress(status: string | null) {
+  return status === 'processing' || status === 'pending' || status === 'queued'
+}
+
+function isTerminalSuccess(status: string | null) {
+  return status === 'completed' || status === 'success' || status === 'done'
+}
 
 export default function TranslatePage() {
   const { projectId } = useParams()
+  const [searchParams] = useSearchParams()
+  const uploadedFileId = useFilesStore((s) => s.fileId)
+  const uploadedProjectId = useFilesStore((s) => s.fileProjectId)
   const [fileId, setFileId] = useState('')
-  const [source, setSource] = useState('en')
-  const [target, setTarget] = useState('es')
-  const { jobId, status, resultFileId, creating, checking, createJob, checkStatus, error } = useTranslationStore()
+  const [source, setSource] = useState<LangCode>('en')
+  const [target, setTarget] = useState<LangCode>('ar')
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const { jobId, status, resultFileId, jobErrorMessage, creating, checking, createJob, checkStatus, restoreJob, error } =
+    useTranslationStore()
+  const [processingSince, setProcessingSince] = useState<number | null>(null)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+
+  const urlFileId = searchParams.get('fileId')
+  const suggestedFileId = projectId
+    ? resolveFileId(projectId, urlFileId, uploadedFileId, uploadedProjectId)
+    : ''
+
+  useEffect(() => {
+    if (!suggestedFileId) return
+    setFileId(suggestedFileId)
+  }, [suggestedFileId])
+
+  useEffect(() => {
+    if (projectId) restoreJob(projectId)
+  }, [projectId, restoreJob])
+
+  useEffect(() => {
+    if (projectId && jobId && status) persistTranslationJob(projectId, jobId, status)
+  }, [projectId, jobId, status])
+
+  useEffect(() => {
+    if (isInProgress(status)) {
+      setProcessingSince((prev) => prev ?? Date.now())
+      return
+    }
+    setProcessingSince(null)
+    setElapsedSeconds(0)
+  }, [status])
+
+  useEffect(() => {
+    if (!processingSince) return
+    const tick = () => setElapsedSeconds(Math.floor((Date.now() - processingSince) / 1000))
+    tick()
+    const timer = window.setInterval(tick, 1000)
+    return () => window.clearInterval(timer)
+  }, [processingSince])
+
+  useEffect(() => {
+    if (!jobId || !isInProgress(status)) return
+    void checkStatus(jobId, { silent: true })
+    const timer = window.setInterval(() => {
+      void checkStatus(jobId, { silent: true })
+    }, 2000)
+    return () => window.clearInterval(timer)
+  }, [jobId, status, checkStatus])
+
+  const elapsedLabel = useMemo(() => {
+    const m = Math.floor(elapsedSeconds / 60)
+    const s = elapsedSeconds % 60
+    return m > 0 ? `${m}m ${s}s` : `${s}s`
+  }, [elapsedSeconds])
+
+  const headerBadgeStatus = useMemo(() => {
+    if (creating || isInProgress(status)) return 'loading' as const
+    if (status === 'failed') return 'error' as const
+    if (isTerminalSuccess(status)) return 'success' as const
+    return 'idle' as const
+  }, [creating, status])
+
+  const jobStatusVariant = useMemo(() => {
+    if (status === 'failed') return 'destructive' as const
+    if (isInProgress(status)) return 'warning' as const
+    if (isTerminalSuccess(status)) return 'success' as const
+    return 'secondary' as const
+  }, [status])
+
+  const languagesValid = source !== target
+
+  async function handleDownload() {
+    if (!jobId) return
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      const fallback =
+        resultFileId && resultFileId.includes('_')
+          ? resultFileId.slice(resultFileId.indexOf('_') + 1)
+          : 'translated.txt'
+      await downloadTranslation(jobId, fallback)
+    } catch (err) {
+      setDownloadError(err instanceof ApiClientError ? err.message : err instanceof Error ? err.message : 'Download failed.')
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <div className="page-container">
@@ -21,9 +146,11 @@ export default function TranslatePage() {
         <div>
           <p className="page-kicker">Translation</p>
           <h1 className="page-title">Translate project content</h1>
-          <p className="page-description">Create translation jobs from uploaded files and monitor their result file IDs.</p>
+          <p className="page-description">
+            Create translation jobs from uploaded files. Large documents may take a few minutes on the server.
+          </p>
         </div>
-        <StatusBadge status={status ? 'success' : jobId ? 'loading' : 'idle'} />
+        <StatusBadge status={headerBadgeStatus} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
@@ -31,20 +158,64 @@ export default function TranslatePage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="field-label" htmlFor="file-id">File ID</label>
-              <Input id="file-id" value={fileId} onChange={(e) => setFileId(e.target.value)} placeholder="Paste an uploaded file ID" />
+              <Input
+                id="file-id"
+                value={fileId}
+                onChange={(e) => setFileId(e.target.value)}
+                placeholder={suggestedFileId ? 'Filled from your last upload' : 'Upload a file on the Files page first'}
+              />
+              {suggestedFileId ? (
+                <p className="field-hint">Using the file ID from your last upload for this project. You can edit it if needed.</p>
+              ) : (
+                <p className="field-hint">
+                  No file ID yet.{' '}
+                  <Link to={`/projects/${projectId}/files`} className="font-medium text-foreground underline-offset-4 hover:underline">
+                    Upload a file
+                  </Link>{' '}
+                  first — the ID will fill in automatically.
+                </p>
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="source-lang">Source language</label>
-                <Input id="source-lang" value={source} onChange={(e) => setSource(e.target.value)} placeholder="en" />
+                <select
+                  id="source-lang"
+                  className={selectClassName}
+                  value={source}
+                  onChange={(e) => setSource(e.target.value as LangCode)}
+                >
+                  {LANG_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="field-label" htmlFor="target-lang">Target language</label>
-                <Input id="target-lang" value={target} onChange={(e) => setTarget(e.target.value)} placeholder="es" />
+                <select
+                  id="target-lang"
+                  className={selectClassName}
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value as LangCode)}
+                >
+                  {LANG_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+            {!languagesValid && (
+              <p className="text-sm text-destructive">Source and target must be different (en ↔ ar).</p>
+            )}
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button onClick={() => createJob(projectId || '', fileId, source, target)} disabled={creating || !fileId.trim()}>
+              <Button
+                onClick={() => createJob(projectId || '', fileId, source, target)}
+                disabled={creating || isInProgress(status) || !fileId.trim() || !languagesValid}
+              >
                 {creating ? <><LoadingSpinner size={4} /> Creating</> : 'Create translation'}
               </Button>
               <Button onClick={() => jobId && checkStatus(jobId)} disabled={!jobId || checking} variant="outline">
@@ -57,6 +228,17 @@ export default function TranslatePage() {
         <AppCard title="Job status">
           <div className="space-y-4">
             {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            {isInProgress(status) && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
+                <p className="flex items-center gap-2 font-medium">
+                  <LoadingSpinner size={4} />
+                  Translating on server… {elapsedSeconds > 0 && <span className="font-normal">({elapsedLabel})</span>}
+                </p>
+                <p className="mt-1 text-xs opacity-90">
+                  Status updates every 2 seconds. You can keep this tab open — no need to click Check status.
+                </p>
+              </div>
+            )}
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
                 <span className="text-muted-foreground">Job ID</span>
@@ -64,11 +246,24 @@ export default function TranslatePage() {
               </div>
               <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
                 <span className="text-muted-foreground">Status</span>
-                <Badge variant={status ? 'success' : 'secondary'}>{status ?? 'Waiting'}</Badge>
+                <Badge variant={jobStatusVariant} className={cn(isInProgress(status) && 'capitalize')}>
+                  {status ?? 'Waiting'}
+                </Badge>
               </div>
-              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+              {status === 'failed' && jobErrorMessage && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  {jobErrorMessage}
+                </div>
+              )}
+              <div className="space-y-2 rounded-md border bg-muted/30 px-3 py-2">
                 <span className="text-muted-foreground">Result file</span>
-                <code className="break-all text-right font-mono text-xs">{resultFileId ?? 'Not available'}</code>
+                <code className="block break-all font-mono text-xs">{resultFileId ?? 'Not available'}</code>
+                {jobId && isTerminalSuccess(status) && (
+                  <Button type="button" className="w-full" variant="outline" disabled={downloading} onClick={() => void handleDownload()}>
+                    {downloading ? <><LoadingSpinner size={4} /> Downloading</> : 'Download translated file'}
+                  </Button>
+                )}
+                {downloadError && <p className="text-sm text-destructive">{downloadError}</p>}
               </div>
             </div>
           </div>
