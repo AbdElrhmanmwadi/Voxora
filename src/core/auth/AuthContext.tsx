@@ -1,12 +1,19 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { AUTH_TOKENS_CHANGED_EVENT, clearTokens, getAccessToken, getRefreshToken, setTokens } from './authStorage'
-import { loginRequest, logoutRequest, registerRequest, type RegisterPayload } from '../../features/auth/api/authApi'
+import {
+  googleLoginRequest,
+  loginRequest,
+  logoutRequest,
+  registerRequest,
+  type RegisterPayload
+} from '../../features/auth/api/authApi'
 
 type AuthContextValue = {
   accessToken: string | null
   refreshToken: string | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: (idToken: string) => Promise<void>
   register: (payload: RegisterPayload) => Promise<void>
   logout: () => Promise<void>
 }
@@ -39,6 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRefreshToken(response.refresh_token)
   }, [])
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const response = await googleLoginRequest(idToken)
+    setTokens(response.access_token, response.refresh_token)
+    setAccessToken(response.access_token)
+    setRefreshToken(response.refresh_token)
+  }, [])
+
   const register = useCallback(async (payload: RegisterPayload) => {
     await registerRequest(payload)
   }, [])
@@ -66,10 +80,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshToken,
       isAuthenticated: Boolean(accessToken),
       login,
+      loginWithGoogle,
       register,
       logout
     }),
-    [accessToken, refreshToken, login, register, logout]
+    [accessToken, refreshToken, login, loginWithGoogle, register, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

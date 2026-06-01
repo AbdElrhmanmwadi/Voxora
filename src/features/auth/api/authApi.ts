@@ -17,6 +17,11 @@ export async function loginRequest(email: string, password: string) {
   return res.data
 }
 
+export async function googleLoginRequest(idToken: string) {
+  const res = await axiosClient.post<AuthTokensResponse>('/auth/google', { id_token: idToken })
+  return res.data
+}
+
 export async function registerRequest(payload: RegisterPayload) {
   const res = await axiosClient.post<{ message: string }>('/auth/register', payload)
   return res.data

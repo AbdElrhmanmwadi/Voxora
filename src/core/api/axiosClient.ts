@@ -23,7 +23,12 @@ const axiosClient = axios.create({
 })
 
 function isAuthEndpoint(url?: string) {
-  return Boolean(url?.startsWith('/auth/login') || url?.startsWith('/auth/register') || url?.startsWith('/auth/refresh'))
+  return Boolean(
+    url?.startsWith('/auth/login') ||
+      url?.startsWith('/auth/google') ||
+      url?.startsWith('/auth/register') ||
+      url?.startsWith('/auth/refresh')
+  )
 }
 
 function toApiError(error: unknown) {

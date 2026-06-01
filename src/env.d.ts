@@ -1,6 +1,6 @@
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string
-  // add other env vars here as needed
+  readonly VITE_GOOGLE_CLIENT_ID?: string
   [key: string]: string | undefined
 }
 
