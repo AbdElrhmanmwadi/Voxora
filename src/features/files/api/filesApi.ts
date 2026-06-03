@@ -1,5 +1,10 @@
 import axiosClient from '../../../core/api/axiosClient'
-import type { UploadResponse, ProcessResponse, IndexPushResponse } from '../../../types/api.types'
+import type { UploadResponse, ProcessResponse, IndexPushResponse, FileListResponse } from '../../../types/api.types'
+
+export async function listFiles(projectId: string): Promise<FileListResponse> {
+  const res = await axiosClient.get(`/api/v1/data/files/${projectId}`)
+  return res.data as FileListResponse
+}
 
 export async function uploadFile(projectId: string, file: File): Promise<UploadResponse> {
   const fd = new FormData()
