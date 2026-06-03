@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useFilesStore } from '../store/useFilesStore'
 import AppCard from '../../../core/components/AppCard'
@@ -8,29 +8,125 @@ import Input from '../../../core/ui/Input'
 import Badge from '../../../core/ui/Badge'
 import StatusBadge from '../../../core/components/StatusBadge'
 
+function formatFileSize(size: number) {
+  if (!Number.isFinite(size) || size <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  let value = size
+  let unitIndex = 0
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024
+    unitIndex += 1
+  }
+  return `${value.toFixed(value >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
+}
+
 export default function FilesPage() {
   const { projectId } = useParams()
+  const activeProjectId = projectId ?? ''
   const [selected, setSelected] = useState<File | null>(null)
   const [chunkSize, setChunkSize] = useState(500)
   const [overlap, setOverlap] = useState(50)
   const [doReset, setDoReset] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const { fileId, isUploading, isProcessing, isIndexing, uploadFile, processFile, pushIndex, logs, error } = useFilesStore()
+  const {
+    fileId,
+    files,
+    selectedFileIds,
+    isLoadingFiles,
+    isUploading,
+    isProcessing,
+    isIndexing,
+    loadFiles,
+    toggleFileSelection,
+    setSelectedFileIds,
+    clearSelectedFiles,
+    uploadFile,
+    processFile,
+    pushIndex,
+    logs,
+    error
+  } = useFilesStore()
+
+  const selectedFiles = useMemo(
+    () => files.filter((file) => selectedFileIds.includes(file.file_id)),
+    [files, selectedFileIds]
+  )
+  const processingFileId = selectedFileIds[0] ?? fileId
+
+  useEffect(() => {
+    if (activeProjectId) void loadFiles(activeProjectId)
+  }, [activeProjectId, loadFiles])
 
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
           <p className="page-kicker">Library</p>
-          <h1 className="page-title">Files for project {projectId}</h1>
-          <p className="page-description">Upload source material, tune processing options, and push content into the project index.</p>
+          <h1 className="page-title">Files for project {activeProjectId}</h1>
+          <p className="page-description">Upload source material, select project files, tune processing options, and push content into the project index.</p>
         </div>
-        <StatusBadge status={fileId ? 'success' : 'idle'} />
+        <StatusBadge status={selectedFileIds.length > 0 ? 'success' : isLoadingFiles ? 'loading' : 'idle'} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
+          <AppCard title="Project files">
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{files.length} files</Badge>
+                  <Badge variant="outline">{selectedFileIds.length} selected</Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectedFileIds(activeProjectId, files.map((file) => file.file_id))}
+                    disabled={!files.length || isLoadingFiles}
+                  >
+                    Select all
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => clearSelectedFiles(activeProjectId)} disabled={!selectedFileIds.length}>
+                    Clear
+                  </Button>
+                </div>
+              </div>
+
+              {isLoadingFiles && <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">Loading project files...</div>}
+              {!isLoadingFiles && files.length === 0 && (
+                <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+                  No files found for this project yet.
+                </div>
+              )}
+              <ul className="space-y-2">
+                {files.map((file) => {
+                  const checked = selectedFileIds.includes(file.file_id)
+                  return (
+                    <li key={file.file_id} className="rounded-md border bg-background p-3">
+                      <label className="flex cursor-pointer items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleFileSelection(activeProjectId, file.file_id)}
+                          className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">{file.file_name}</span>
+                          <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                            <span>{formatFileSize(file.file_size)}</span>
+                            <span className="break-all font-mono">{file.file_id}</span>
+                          </span>
+                        </span>
+                      </label>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </AppCard>
+
           <AppCard title="Upload file">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -44,7 +140,7 @@ export default function FilesPage() {
                   <span className="font-medium">{selected.name}</span>
                 </div>
               )}
-              <Button onClick={() => selected && uploadFile(projectId || '', selected)} disabled={!selected || isUploading}>
+              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || isUploading || !activeProjectId}>
                 {isUploading ? <><LoadingSpinner size={4} /> Uploading</> : 'Upload file'}
               </Button>
             </div>
@@ -53,15 +149,15 @@ export default function FilesPage() {
           <AppCard title="Process and index">
             <div className="space-y-4">
               <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-sm text-muted-foreground">Current file ID</span>
-                <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{fileId ?? 'No file uploaded'}</code>
+                <span className="text-sm text-muted-foreground">File to process</span>
+                <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{processingFileId ?? 'Select a project file'}</code>
               </div>
-              {fileId && (
+              {processingFileId && (
                 <Link
-                  to={`/projects/${projectId}/translate?fileId=${encodeURIComponent(fileId)}`}
+                  to={`/projects/${activeProjectId}/translate?fileId=${encodeURIComponent(processingFileId)}`}
                   className="inline-block text-sm font-medium text-foreground underline-offset-4 hover:underline"
                 >
-                  Translate this file →
+                  Translate this file
                 </Link>
               )}
 
@@ -93,15 +189,18 @@ export default function FilesPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
-                  onClick={() => processFile(projectId || '', { file_id: fileId || '', chunk_size: chunkSize, overlap_size: overlap, do_reset: doReset })}
-                  disabled={!fileId || isProcessing}
+                  onClick={() => processFile(activeProjectId, { file_id: processingFileId || '', chunk_size: chunkSize, overlap_size: overlap, do_reset: doReset })}
+                  disabled={!processingFileId || isProcessing}
                 >
                   {isProcessing ? <><LoadingSpinner size={4} /> Processing</> : 'Process file'}
                 </Button>
-                <Button onClick={() => pushIndex(projectId || '', doReset)} disabled={isIndexing} variant="outline">
+                <Button onClick={() => pushIndex(activeProjectId, doReset)} disabled={isIndexing || !activeProjectId} variant="outline">
                   {isIndexing ? <><LoadingSpinner size={4} /> Indexing</> : 'Push index'}
                 </Button>
               </div>
+              {selectedFiles.length > 1 && (
+                <p className="field-hint">Processing uses the first selected file. Ask and Voice can use all selected files as context.</p>
+              )}
             </div>
           </AppCard>
         </div>
