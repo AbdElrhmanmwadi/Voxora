@@ -77,7 +77,11 @@ export const useFilesStore = create<FilesState>((set, get) => ({
           attempts += 1
           const isNotFound = e instanceof ApiClientError && e.status === 404
           console.debug('[useFilesStore] listFiles error', { projectId, attempts, isNotFound, err: String(e) })
-          if (!isNotFound || attempts >= 3) throw e
+          if (!isNotFound) throw e
+          if (attempts >= 3) {
+            res = { signal: 'success', files: [] }
+            break
+          }
           // wait before retrying
           await new Promise((r) => setTimeout(r, 400 * attempts))
         }
