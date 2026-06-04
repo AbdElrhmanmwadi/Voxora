@@ -8,8 +8,8 @@ interface RagState {
   answer: string | null
   loading: boolean
   error: string | null
-  search: (projectId: string, text: string, limit?: number) => Promise<void>
-  ask: (projectId: string, text: string, limit?: number) => Promise<void>
+  search: (projectId: string, text: string, limit?: number, fileIds?: string[]) => Promise<void>
+  ask: (projectId: string, text: string, limit?: number, fileIds?: string[]) => Promise<void>
 }
 
 export const useRagStore = create<RagState>((set, get) => ({
@@ -17,10 +17,10 @@ export const useRagStore = create<RagState>((set, get) => ({
   answer: null,
   loading: false,
   error: null,
-  search: async (projectId, text, limit = 5) => {
+  search: async (projectId, text, limit = 5, fileIds = []) => {
     set({ loading: true, error: null })
     try {
-      const res = await api.searchIndex(projectId, text, limit)
+      const res = await api.searchIndex(projectId, text, limit, fileIds)
       set({ results: res.search_result })
     } catch (e) {
       set({ error: extractError(e as unknown) })
@@ -28,10 +28,10 @@ export const useRagStore = create<RagState>((set, get) => ({
       set({ loading: false })
     }
   },
-  ask: async (projectId, text, limit = 5) => {
+  ask: async (projectId, text, limit = 5, fileIds = []) => {
     set({ loading: true, error: null })
     try {
-      const res = await api.askQuestion(projectId, text, limit)
+      const res = await api.askQuestion(projectId, text, limit, fileIds)
       set({ answer: res.answer })
     } catch (e) {
       set({ error: extractError(e as unknown) })
