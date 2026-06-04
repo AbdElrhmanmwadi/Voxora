@@ -33,6 +33,7 @@ export default function FilesPage() {
     fileId,
     files,
     selectedFileIds,
+    selectedFileOutboundIds,
     isLoadingFiles,
     isUploading,
     isProcessing,
@@ -49,10 +50,10 @@ export default function FilesPage() {
   } = useFilesStore()
 
   const selectedFiles = useMemo(
-    () => files.filter((file) => selectedFileIds.includes(file.file_id)),
+    () => files.filter((file) => selectedFileIds.includes(String(file.file_id))),
     [files, selectedFileIds]
   )
-  const processingFileId = selectedFileIds[0] ?? fileId
+  const processingFileId = selectedFileOutboundIds[0] ?? selectedFileIds[0] ?? fileId
 
   useEffect(() => {
     if (activeProjectId) void loadFiles(activeProjectId)
@@ -83,7 +84,7 @@ export default function FilesPage() {
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => setSelectedFileIds(activeProjectId, files.map((file) => file.file_id))}
+                    onClick={() => setSelectedFileIds(activeProjectId, files.map((file) => String(file.file_id)))}
                     disabled={!files.length || isLoadingFiles}
                   >
                     Select all
@@ -102,21 +103,23 @@ export default function FilesPage() {
               )}
               <ul className="space-y-2">
                 {files.map((file) => {
-                  const checked = selectedFileIds.includes(file.file_id)
+                  const fileId = String(file.file_id)
+                  const checked = selectedFileIds.includes(fileId)
                   return (
                     <li key={file.file_id} className="rounded-md border bg-background p-3">
                       <label className="flex cursor-pointer items-start gap-3">
                         <input
                           type="checkbox"
                           checked={checked}
-                          onChange={() => toggleFileSelection(activeProjectId, file.file_id)}
+                          onChange={() => toggleFileSelection(activeProjectId, fileId)}
                           className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                         />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium">{file.file_name}</span>
                           <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                             <span>{formatFileSize(file.file_size)}</span>
-                            <span className="break-all font-mono">{file.file_id}</span>
+
+                            
                           </span>
                         </span>
                       </label>
