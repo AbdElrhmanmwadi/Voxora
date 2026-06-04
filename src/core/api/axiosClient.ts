@@ -33,8 +33,19 @@ function isAuthEndpoint(url?: string) {
 
 function toApiError(error: unknown) {
   if (error instanceof AxiosError) {
-    const detail = error.response?.data?.detail
-    const message = typeof detail === 'string' ? detail : error.message || 'Unknown error'
+    const data = error.response?.data
+    let message = error.message || 'Unknown error'
+    if (data) {
+      if (typeof data.detail === 'string') message = data.detail
+      else if (typeof data.message === 'string') message = data.message
+      else {
+        try {
+          message = JSON.stringify(data)
+        } catch {
+          message = String(data)
+        }
+      }
+    }
     return new ApiClientError(message, error.response?.status)
   }
   if (error instanceof Error) return error
