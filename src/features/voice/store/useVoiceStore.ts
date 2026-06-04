@@ -7,7 +7,7 @@ interface VoiceState {
   answer: string | null
   loading: boolean
   error: string | null
-  sendAudio: (projectId: string, audio: Blob) => Promise<void>
+  sendAudio: (projectId: string, audio: Blob, fileIds?: string[]) => Promise<void>
 }
 
 export const useVoiceStore = create<VoiceState>((set, get) => ({
@@ -15,10 +15,10 @@ export const useVoiceStore = create<VoiceState>((set, get) => ({
   answer: null,
   loading: false,
   error: null,
-  sendAudio: async (projectId, audio) => {
+  sendAudio: async (projectId, audio, fileIds = []) => {
     set({ loading: true, error: null })
     try {
-      const res = await api.voiceChat(projectId, audio, { return_audio_base64: true })
+      const res = await api.voiceChat(projectId, audio, { return_audio_base64: true, fileIds })
       set({ transcript: res.transcript ?? null, answer: res.answer ?? null })
     } catch (e) {
       set({ error: extractError(e as unknown) })
