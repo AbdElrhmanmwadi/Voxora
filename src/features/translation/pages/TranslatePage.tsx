@@ -47,6 +47,10 @@ export default function TranslatePage() {
   const [searchParams] = useSearchParams()
   const uploadedFileId = useFilesStore((s) => s.fileId)
   const uploadedProjectId = useFilesStore((s) => s.fileProjectId)
+  const files = useFilesStore((s) => s.files)
+  const selectedFileIds = useFilesStore((s) => s.selectedFileIds)
+  const isLoadingFiles = useFilesStore((s) => s.isLoadingFiles)
+  const loadFiles = useFilesStore((s) => s.loadFiles)
   const [fileId, setFileId] = useState('')
   const [source, setSource] = useState<LangCode>('en')
   const [target, setTarget] = useState<LangCode>('ar')
@@ -59,8 +63,13 @@ export default function TranslatePage() {
 
   const urlFileId = searchParams.get('fileId')
   const suggestedFileId = projectId
-    ? resolveFileId(projectId, urlFileId, uploadedFileId, uploadedProjectId)
+    ? selectedFileIds[0] ?? resolveFileId(projectId, urlFileId, uploadedFileId, uploadedProjectId)
     : ''
+  const selectedFile = useMemo(() => files.find((file) => file.file_id === fileId), [files, fileId])
+
+  useEffect(() => {
+    if (projectId) void loadFiles(projectId)
+  }, [projectId, loadFiles])
 
   useEffect(() => {
     if (!suggestedFileId) return
@@ -147,7 +156,7 @@ export default function TranslatePage() {
           <p className="page-kicker">Translation</p>
           <h1 className="page-title">Translate project content</h1>
           <p className="page-description">
-            Create translation jobs from uploaded files. Large documents may take a few minutes on the server.
+            Create translation jobs from selected project files. Large documents may take a few minutes on the server.
           </p>
         </div>
         <StatusBadge status={headerBadgeStatus} />
@@ -157,60 +166,62 @@ export default function TranslatePage() {
         <AppCard title="Create job">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="field-label" htmlFor="file-id">File ID</label>
-              <Input
-                id="file-id"
-                value={fileId}
-                onChange={(e) => setFileId(e.target.value)}
-                placeholder={suggestedFileId ? 'Filled from your last upload' : 'Upload a file on the Files page first'}
-              />
-              {suggestedFileId ? (
-                <p className="field-hint">Using the file ID from your last upload for this project. You can edit it if needed.</p>
+              <label className="field-label" htmlFor="file-id">Project file</label>
+              {files.length > 0 ? (
+                <select
+                  id="file-id"
+                  className={selectClassName}
+                  value={fileId}
+                  onChange={(e) => setFileId(e.target.value)}
+                >
+                  <option value="">Select a project file</option>
+                  {files.map((file) => (
+                    <option key={file.file_id} value={file.file_id}>
+                      {file.file_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Input
+                  id="file-id"
+                  value={fileId}
+                  onChange={(e) => setFileId(e.target.value)}
+                  placeholder={isLoadingFiles ? 'Loading project files...' : 'Upload a file on the Files page first'}
+                />
+              )}
+              {selectedFile ? (
+                <p className="field-hint">Selected file ID: {selectedFile.file_id}</p>
+              ) : suggestedFileId ? (
+                <p className="field-hint">Using the selected file ID for this project.</p>
               ) : (
                 <p className="field-hint">
-                  No file ID yet.{' '}
+                  Select or upload a file on the{' '}
                   <Link to={`/projects/${projectId}/files`} className="font-medium text-foreground underline-offset-4 hover:underline">
-                    Upload a file
+                    Files page
                   </Link>{' '}
-                  first — the ID will fill in automatically.
+                  first.
                 </p>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="source-lang">Source language</label>
-                <select
-                  id="source-lang"
-                  className={selectClassName}
-                  value={source}
-                  onChange={(e) => setSource(e.target.value as LangCode)}
-                >
+                <select id="source-lang" className={selectClassName} value={source} onChange={(e) => setSource(e.target.value as LangCode)}>
                   {LANG_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-2">
                 <label className="field-label" htmlFor="target-lang">Target language</label>
-                <select
-                  id="target-lang"
-                  className={selectClassName}
-                  value={target}
-                  onChange={(e) => setTarget(e.target.value as LangCode)}
-                >
+                <select id="target-lang" className={selectClassName} value={target} onChange={(e) => setTarget(e.target.value as LangCode)}>
                   {LANG_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
             </div>
-            {!languagesValid && (
-              <p className="text-sm text-destructive">Source and target must be different (en ↔ ar).</p>
-            )}
+            {!languagesValid && <p className="text-sm text-destructive">Source and target must be different.</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 onClick={() => createJob(projectId || '', fileId, source, target)}
@@ -232,10 +243,10 @@ export default function TranslatePage() {
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
                 <p className="flex items-center gap-2 font-medium">
                   <LoadingSpinner size={4} />
-                  Translating on server… {elapsedSeconds > 0 && <span className="font-normal">({elapsedLabel})</span>}
+                  Translating on server... {elapsedSeconds > 0 && <span className="font-normal">({elapsedLabel})</span>}
                 </p>
                 <p className="mt-1 text-xs opacity-90">
-                  Status updates every 2 seconds. You can keep this tab open — no need to click Check status.
+                  Status updates every 2 seconds. You can keep this tab open; no need to click Check status.
                 </p>
               </div>
             )}
