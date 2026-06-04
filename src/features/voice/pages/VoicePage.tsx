@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import useAudioRecorder from '../hooks/useAudioRecorder'
 import { useVoiceStore } from '../store/useVoiceStore'
+import { useFilesStore } from '../../files/store/useFilesStore'
 import AppCard from '../../../core/components/AppCard'
 import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
@@ -10,15 +11,28 @@ import StatusBadge from '../../../core/components/StatusBadge'
 
 export default function VoicePage() {
   const { projectId } = useParams()
+  const activeProjectId = projectId ?? ''
   const { start, stop, recording } = useAudioRecorder()
   const { transcript, answer, loading, error, sendAudio } = useVoiceStore()
+  const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
   const [lastBlobUrl, setLastBlobUrl] = useState<string | null>(null)
+
+  const selectedFiles = useMemo(
+    () => files.filter((file) => selectedFileIds.includes(file.file_id)),
+    [files, selectedFileIds]
+  )
+  const hasSelectedFiles = selectedFileIds.length > 0
+
+  useEffect(() => {
+    if (activeProjectId) void loadFiles(activeProjectId)
+  }, [activeProjectId, loadFiles])
 
   async function handleStop() {
     const blob = await stop()
     const url = URL.createObjectURL(blob)
     setLastBlobUrl(url)
-    await sendAudio(projectId || '', blob)
+    if (!hasSelectedFiles) return
+    await sendAudio(activeProjectId, blob, selectedFileIds)
   }
 
   return (
@@ -26,8 +40,8 @@ export default function VoicePage() {
       <div className="page-header">
         <div>
           <p className="page-kicker">Voice</p>
-          <h1 className="page-title">Speak to project {projectId}</h1>
-          <p className="page-description">Record a voice question, submit the audio, and review the transcript with the generated answer.</p>
+          <h1 className="page-title">Speak to project {activeProjectId}</h1>
+          <p className="page-description">Record a voice question and answer it using only selected project files.</p>
         </div>
         <StatusBadge status={recording ? 'loading' : transcript ? 'success' : 'idle'} />
       </div>
@@ -35,6 +49,23 @@ export default function VoicePage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <AppCard title="Recorder">
           <div className="space-y-5">
+            <div className="space-y-3 rounded-md border bg-muted/30 p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={hasSelectedFiles ? 'success' : 'warning'}>{selectedFileIds.length} selected files</Badge>
+                {isLoadingFiles && <span className="text-sm text-muted-foreground">Loading project files...</span>}
+              </div>
+              {selectedFiles.length > 0 ? (
+                <ul className="space-y-2">
+                  {selectedFiles.map((file) => (
+                    <li key={file.file_id} className="truncate text-sm font-medium">{file.file_name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Select files before recording. <Link to={`/projects/${activeProjectId}/files`} className="font-medium text-foreground underline-offset-4 hover:underline">Open files</Link>
+                </p>
+              )}
+            </div>
             <div className="rounded-lg border bg-muted/30 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -45,7 +76,7 @@ export default function VoicePage() {
                   <p className="mt-1 text-sm text-muted-foreground">Microphone access is requested by the existing recorder hook.</p>
                 </div>
                 <div className="flex gap-3">
-                  <Button onClick={() => start()} disabled={recording}>Record</Button>
+                  <Button onClick={() => start()} disabled={recording || !hasSelectedFiles}>Record</Button>
                   <Button onClick={handleStop} disabled={!recording} variant="outline">
                     {!recording ? 'Stop' : <><LoadingSpinner size={4} /> Stop</>}
                   </Button>
