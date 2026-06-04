@@ -31,7 +31,7 @@ function resolveFileId(
 ): string {
   if (urlFileId?.trim()) return urlFileId.trim()
   if (storeFileId && storeProjectId === projectId) return storeFileId
-  return getProjectFileId(projectId) ?? ''
+  return (getProjectFileId(projectId) ?? '').trim()
 }
 
 function isInProgress(status: string | null) {
@@ -63,9 +63,15 @@ export default function TranslatePage() {
 
   const urlFileId = searchParams.get('fileId')
   const suggestedFileId = projectId
-    ? selectedFileIds[0] ?? resolveFileId(projectId, urlFileId, uploadedFileId, uploadedProjectId)
+    ? ((): string => {
+        if (selectedFileIds[0]) {
+          const sel = files.find((f) => f.file_id === selectedFileIds[0])
+          return sel?.file_name ?? selectedFileIds[0]
+        }
+        return resolveFileId(projectId, urlFileId, uploadedFileId, uploadedProjectId)
+      })()
     : ''
-  const selectedFile = useMemo(() => files.find((file) => file.file_id === fileId), [files, fileId])
+  const selectedFile = useMemo(() => files.find((file) => file.file_id === fileId || file.file_name === fileId), [files, fileId])
 
   useEffect(() => {
     if (projectId) void loadFiles(projectId)
@@ -73,8 +79,21 @@ export default function TranslatePage() {
 
   useEffect(() => {
     if (!suggestedFileId) return
+    console.debug('[TranslatePage] suggestedFileId -> setFileId', { projectId, suggestedFileId, urlFileId, uploadedFileId, uploadedProjectId, selectedFileIds })
     setFileId(suggestedFileId)
   }, [suggestedFileId])
+
+  useEffect(() => {
+    console.debug('[TranslatePage] state snapshot', {
+      projectId,
+      urlFileId,
+      fileId,
+      uploadedFileId,
+      uploadedProjectId,
+      selectedFileIds,
+      filesCount: files.length
+    })
+  }, [projectId, urlFileId, fileId, uploadedFileId, uploadedProjectId, selectedFileIds, files.length])
 
   useEffect(() => {
     if (projectId) restoreJob(projectId)
@@ -176,7 +195,7 @@ export default function TranslatePage() {
                 >
                   <option value="">Select a project file</option>
                   {files.map((file) => (
-                    <option key={file.file_id} value={file.file_id}>
+                    <option key={file.file_id} value={file.file_name ?? file.file_id}>
                       {file.file_name}
                     </option>
                   ))}
@@ -190,9 +209,9 @@ export default function TranslatePage() {
                 />
               )}
               {selectedFile ? (
-                <p className="field-hint">Selected file ID: {selectedFile.file_id}</p>
+                <p className="field-hint">Selected file: {selectedFile.file_name} ({selectedFile.file_id})</p>
               ) : suggestedFileId ? (
-                <p className="field-hint">Using the selected file ID for this project.</p>
+                <p className="field-hint">Using the selected file for this project.</p>
               ) : (
                 <p className="field-hint">
                   Select or upload a file on the{' '}
@@ -225,7 +244,7 @@ export default function TranslatePage() {
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 onClick={() => createJob(projectId || '', fileId, source, target)}
-                disabled={creating || isInProgress(status) || !fileId.trim() || !languagesValid}
+                disabled={creating || isInProgress(status) || !(String(fileId ?? '').trim()) || !languagesValid}
               >
                 {creating ? <><LoadingSpinner size={4} /> Creating</> : 'Create translation'}
               </Button>
