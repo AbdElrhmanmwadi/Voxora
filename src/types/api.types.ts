@@ -3,6 +3,21 @@ export interface UploadResponse {
   file_id: string;
 }
 
+export interface ProjectFile {
+  file_id: string;
+  file_name: string;
+  file_size: number;
+  file_type?: string;
+  file_path?: string;
+  file_created_at?: string;
+  file_updated_at?: string;
+}
+
+export interface FileListResponse {
+  signal: string;
+  files: ProjectFile[];
+}
+
 export interface ProcessResponse {
   signal: string;
   inserted_chunks: number;
