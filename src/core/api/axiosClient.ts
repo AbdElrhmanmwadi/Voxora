@@ -15,7 +15,19 @@ export class ApiClientError extends Error {
   }
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+function getApiBaseUrl() {
+  const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim()
+
+  if (import.meta.env.PROD && (!rawBaseUrl || rawBaseUrl === '/')) {
+    throw new Error('VITE_API_BASE_URL must be set to the deployed backend URL in production.')
+  }
+
+  if (!rawBaseUrl || rawBaseUrl === '/') return ''
+
+  return rawBaseUrl.replace(/\/$/, '')
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL || undefined,
