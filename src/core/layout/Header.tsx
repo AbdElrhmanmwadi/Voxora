@@ -6,7 +6,9 @@ import Badge from '../ui/Badge'
 import { useAuth } from '../auth/AuthContext'
 
 export default function Header() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const displayName = user?.username || user?.name || user?.email || ''
+  const avatarInitials = displayName ? getInitials(displayName) : 'U'
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -24,12 +26,26 @@ export default function Header() {
             <Badge variant="secondary" className="hidden sm:inline-flex">Beta</Badge>
             <Button size="sm" variant="outline">Upgrade</Button>
             <Button size="sm" variant="ghost" onClick={logout}>Logout</Button>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border bg-card text-xs font-semibold shadow-sm" aria-label="Current user">
-              ME
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border bg-card text-xs font-semibold shadow-sm" aria-label={displayName ? `Current user: ${displayName}` : 'Current user'} title={displayName || undefined}>
+              {avatarInitials}
             </div>
           </div>
         </div>
       </div>
     </header>
   )
+}
+
+function getInitials(value: string) {
+  const name = value.trim()
+  if (!name) return 'U'
+
+  const emailName = name.includes('@') ? name.split('@')[0] : name
+  const parts = emailName.split(/[\s._-]+/).filter(Boolean)
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  }
+
+  return Array.from(emailName).slice(0, 2).join('').toUpperCase()
 }
