@@ -11,6 +11,8 @@ import ProtectedRoute from './core/auth/ProtectedRoute'
 import LoginPage from './features/auth/pages/LoginPage'
 import RegisterPage from './features/auth/pages/RegisterPage'
 import VerifyEmailPage from './features/auth/pages/VerifyEmailPage'
+import { useParams } from 'react-router-dom'
+import AgentChat from './components/AgentChat'
 
 function protectedPage(page: React.ReactNode) {
   return (
@@ -18,6 +20,12 @@ function protectedPage(page: React.ReactNode) {
       <AppShell>{page}</AppShell>
     </ProtectedRoute>
   )
+}
+
+function AgentRoute() {
+  const { projectId } = useParams()
+  // projectId comes from the URL params
+  return <AgentChat projectId={projectId ?? ''} />
 }
 
 const router = createBrowserRouter([
@@ -28,6 +36,12 @@ const router = createBrowserRouter([
   { path: '/projects/:projectId', element: protectedPage(<ProjectDashboardPage />) },
   { path: '/projects/:projectId/files', element: protectedPage(<FilesPage />) },
   { path: '/projects/:projectId/ask', element: protectedPage(<AskPage />) },
+  {
+    path: '/projects/:projectId/agent',
+    element: protectedPage(
+      <AgentRoute />
+    ),
+  },
   { path: '/projects/:projectId/translate', element: protectedPage(<TranslatePage />) },
   { path: '/projects/:projectId/voice', element: protectedPage(<VoicePage />) }
 ])
