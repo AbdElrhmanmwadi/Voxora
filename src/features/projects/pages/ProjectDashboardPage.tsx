@@ -8,6 +8,7 @@ import { useFilesStore } from '../../files/store/useFilesStore'
 const tools = [
   { path: 'files', title: 'Files', description: 'Upload source assets, process chunks, and push indexes.' },
   { path: 'ask', title: 'Ask AI', description: 'Search indexed content and generate grounded answers.' },
+  { path: 'agent', title: 'Agent Chat', description: 'Chat with the project-scoped agent for RAG-powered answers.' },
   { path: 'translate', title: 'Translation', description: 'Create translation jobs and track output files.' },
   { path: 'voice', title: 'Voice', description: 'Record audio, transcribe, and ask from speech.' }
 ]
