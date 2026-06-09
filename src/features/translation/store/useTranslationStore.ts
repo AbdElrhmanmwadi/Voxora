@@ -1,4 +1,4 @@
-import create from 'zustand'
+import { create } from 'zustand'
 import * as api from '../api/translationApi'
 import { useFilesStore } from '../../files/store/useFilesStore'
 import { extractError } from '../../../core/api/apiException'
