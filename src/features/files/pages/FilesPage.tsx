@@ -134,8 +134,8 @@ export default function FilesPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="asset-file">Source file</label>
-                <Input id="asset-file" type="file" accept=".txt,.pdf,.docx,.csv,.html,.xlsx" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} />
-                <p className="field-hint">Supported formats: TXT, PDF, DOCX, CSV, HTML, and XLSX.</p>
+                <Input id="asset-file" type="file" accept=".txt,.md,.pdf,.docx,.csv,.html" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} />
+                <p className="field-hint">Supported formats: TXT, MD, PDF, DOCX, CSV, and HTML.</p>
               </div>
               {selected && (
                 <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
