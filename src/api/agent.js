@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Use Vite proxy / env to reach backend during development.
-const apiBase = import.meta.env.VITE_API_BASE ?? ''
+const apiBase = import.meta.env.VITE_API_BASE_URL ?? ''
 const api = axios.create({ baseURL: apiBase })
 
 // Attach bearer token from localStorage for every request
