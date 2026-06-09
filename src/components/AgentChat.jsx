@@ -13,7 +13,7 @@ export default function AgentChat({ projectId }) {
   }, [projectId])
 
   return (
-    <div className="flex h-full min-h-screen bg-[#0f0f0f] text-white font-inter">
+    <div className="flex h-[calc(100vh-9rem)] overflow-hidden rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] text-white font-inter">
       <SessionSidebar
         sessions={agent.sessions}
         currentSessionId={agent.currentSessionId}
