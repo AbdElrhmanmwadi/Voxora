@@ -1,4 +1,4 @@
-import create from 'zustand'
+import { create } from 'zustand'
 import type { UploadResponse, ProcessResponse, ProjectFile } from '../../../types/api.types'
 import * as api from '../api/filesApi'
 import { extractError } from '../../../core/api/apiException'
