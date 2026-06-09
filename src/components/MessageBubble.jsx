@@ -1,11 +1,39 @@
 import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 
-function SourceItem({ src }) {
+// Backend sends each source as { text, score, metadata }, where metadata may hold
+// question/section/source/page. Older shapes (file_name/preview/chunk) kept as fallbacks.
+function sourceTitle(src, index) {
+  const meta = src.metadata || {}
+  const raw =
+    meta.question || meta.section || meta.title || meta.source ||
+    src.file_name || src.name
+  if (!raw) return `Source ${index + 1}`
+  // If it's a path, show just the file name.
+  const base = String(raw).split(/[\\/]/).pop()
+  return base || `Source ${index + 1}`
+}
+
+function sourcePreview(src) {
+  const text = src.text || src.preview || src.chunk || ''
+  return text.length > 240 ? text.slice(0, 240).trimEnd() + '…' : text
+}
+
+function SourceItem({ src, index }) {
+  const page = src.metadata && src.metadata.page
+  const hasScore = typeof src.score === 'number'
   return (
     <div className="p-2 border border-[#2a2a2a] rounded mb-2">
-      <div className="text-xs text-gray-300">{src.file_name || src.name || 'source'}</div>
-      <div className="text-sm text-gray-200 truncate">{src.preview || src.chunk || ''}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs text-gray-300 truncate">
+          {sourceTitle(src, index)}
+          {page != null && <span className="text-gray-500"> · p.{page}</span>}
+        </div>
+        {hasScore && (
+          <span className="text-xs text-gray-500 shrink-0">{src.score.toFixed(3)}</span>
+        )}
+      </div>
+      <div className="text-sm text-gray-200 whitespace-pre-wrap break-words mt-1">{sourcePreview(src)}</div>
     </div>
   )
 }
@@ -14,6 +42,10 @@ export default function MessageBubble({ message }) {
   const isUser = message.role === 'user'
   const [showSources, setShowSources] = useState(false)
   const [showTrace, setShowTrace] = useState(false)
+
+  // Live replies put these on the message; reopened sessions nest them under metadata.
+  const sources = message.sources || (message.metadata && message.metadata.sources) || []
+  const trace = message.tool_trace || (message.metadata && message.metadata.tool_trace) || []
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -35,17 +67,17 @@ export default function MessageBubble({ message }) {
 
         {!isUser && showSources && (
           <div className="mt-2">
-            {(message.sources || []).length === 0 && <div className="text-xs text-gray-500">No sources</div>}
-            {(message.sources || []).map((s, i) => <SourceItem key={i} src={s} />)}
+            {sources.length === 0 && <div className="text-xs text-gray-500">No sources</div>}
+            {sources.map((s, i) => <SourceItem key={i} src={s} index={i} />)}
           </div>
         )}
 
         {!isUser && showTrace && (
           <div className="mt-2 text-xs text-gray-400">
-            {(message.tool_trace || []).length === 0 && <div>No trace</div>}
-            {(message.tool_trace || []).map((t, i) => (
+            {trace.length === 0 && <div>No trace</div>}
+            {trace.map((t, i) => (
               <div key={i} className="p-2 border border-[#2a2a2a] rounded mb-2">
-                <div className="font-semibold">{t.signal || t.step || `step ${i + 1}`}</div>
+                <div className="font-semibold">{t.name || t.signal || t.step || `step ${i + 1}`}</div>
                 <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(t, null, 2)}</pre>
               </div>
             ))}
