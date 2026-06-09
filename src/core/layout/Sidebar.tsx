@@ -31,6 +31,7 @@ export default function Sidebar() {
           <NavItem to="/" end>Projects</NavItem>
           <NavItem to={base} end>Overview</NavItem>
           <NavItem to={`${base}/ask`}>Ask AI</NavItem>
+          <NavItem to={`${base}/agent`}>Agent Chat</NavItem>
           <NavItem to={`${base}/translate`}>Translate</NavItem>
           <NavItem to={`${base}/voice`}>Voice</NavItem>
         </div>
