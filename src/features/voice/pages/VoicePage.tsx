@@ -27,6 +27,12 @@ export default function VoicePage() {
     if (activeProjectId) void loadFiles(activeProjectId)
   }, [activeProjectId, loadFiles])
 
+  useEffect(() => {
+    return () => {
+      if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl)
+    }
+  }, [lastBlobUrl])
+
   async function handleStop() {
     const blob = await stop()
     const url = URL.createObjectURL(blob)

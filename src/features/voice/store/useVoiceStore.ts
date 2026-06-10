@@ -10,7 +10,7 @@ interface VoiceState {
   sendAudio: (projectId: string, audio: Blob, fileIds?: string[]) => Promise<void>
 }
 
-export const useVoiceStore = create<VoiceState>((set, get) => ({
+export const useVoiceStore = create<VoiceState>((set) => ({
   transcript: null,
   answer: null,
   loading: false,
