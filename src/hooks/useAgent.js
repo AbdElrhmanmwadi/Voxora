@@ -68,9 +68,12 @@ export default function useAgent(projectId) {
       try {
         const data = await api.getSessionMessages(projectId, id)
         if (projectRef.current !== projectId) return
-        setMessages(toList(data, 'messages').map(normalizeMessage))
-        setCurrentSessionId(id)
-        saveSessionId(projectId, id)
+        // Backend nests the detail: { signal, session: { ..., messages: [...] } }
+        const detail = data && typeof data === 'object' && data.session ? data.session : data
+        const resolvedId = sessionId(detail) ?? id
+        setMessages(toList(detail, 'messages').map(normalizeMessage))
+        setCurrentSessionId(resolvedId)
+        saveSessionId(projectId, resolvedId)
       } catch (e) {
         if (projectRef.current !== projectId) return
         setError(e)
@@ -95,7 +98,8 @@ export default function useAgent(projectId) {
     setCurrentSessionId(null)
     setError(null)
     const saved = readSavedSessionId(projectId)
-    if (saved) void loadSession(saved)
+    // Session ids are integers server-side; sessionStorage returns strings.
+    if (saved) void loadSession(/^\d+$/.test(saved) ? Number(saved) : saved)
   }, [projectId, loadSession])
 
   const startNewChat = useCallback(() => {
@@ -111,8 +115,8 @@ export default function useAgent(projectId) {
       try {
         await api.deleteSession(projectId, id)
         await loadSessions()
-        if (id === currentSessionId) startNewChat()
-        if (id === readSavedSessionId(projectId)) saveSessionId(projectId, null)
+        if (String(id) === String(currentSessionId ?? '')) startNewChat()
+        if (String(id) === String(readSavedSessionId(projectId) ?? '')) saveSessionId(projectId, null)
       } catch (e) {
         setError(e)
       } finally {
