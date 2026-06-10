@@ -72,6 +72,31 @@ axiosClient.interceptors.request.use((config) => {
   return config
 })
 
+// Single-flight refresh: concurrent 401s share one refresh request so a rotated
+// refresh token is never consumed twice (which would invalidate the session).
+let refreshPromise: Promise<string> | null = null
+
+async function refreshAccessToken(refreshToken: string): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = axios
+      .post(
+        `${API_BASE_URL}/auth/refresh`,
+        { refresh_token: refreshToken },
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+      .then((response) => {
+        const accessToken = response.data.access_token as string
+        const nextRefreshToken = response.data.refresh_token as string
+        setTokens(accessToken, nextRefreshToken)
+        return accessToken
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
 axiosClient.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
@@ -82,14 +107,7 @@ axiosClient.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
-          { refresh_token: refreshToken },
-          { headers: { 'Content-Type': 'application/json' } }
-        )
-        const accessToken = response.data.access_token as string
-        const nextRefreshToken = response.data.refresh_token as string
-        setTokens(accessToken, nextRefreshToken)
+        const accessToken = await refreshAccessToken(refreshToken)
         originalRequest.headers.Authorization = `Bearer ${accessToken}`
         return axiosClient(originalRequest)
       } catch (refreshError) {
