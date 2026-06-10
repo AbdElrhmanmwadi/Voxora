@@ -11,6 +11,8 @@ import ProtectedRoute from './core/auth/ProtectedRoute'
 import LoginPage from './features/auth/pages/LoginPage'
 import RegisterPage from './features/auth/pages/RegisterPage'
 import VerifyEmailPage from './features/auth/pages/VerifyEmailPage'
+import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage'
+import ResetPasswordPage from './features/auth/pages/ResetPasswordPage'
 import AgentChat from './components/AgentChat'
 
 function protectedPage(page: React.ReactNode) {
@@ -31,6 +33,8 @@ const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/auth/verify-email', element: <VerifyEmailPage /> },
+  { path: '/auth/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/auth/reset-password', element: <ResetPasswordPage /> },
   { path: '/', element: protectedPage(<ProjectsPage />) },
   { path: '/projects/:projectId', element: protectedPage(<ProjectDashboardPage />) },
   { path: '/projects/:projectId/files', element: protectedPage(<FilesPage />) },

@@ -39,7 +39,9 @@ function isAuthEndpoint(url?: string) {
     url?.startsWith('/auth/login') ||
       url?.startsWith('/auth/google') ||
       url?.startsWith('/auth/register') ||
-      url?.startsWith('/auth/refresh')
+      url?.startsWith('/auth/refresh') ||
+      url?.startsWith('/auth/request-password-reset') ||
+      url?.startsWith('/auth/reset-password')
   )
 }
 

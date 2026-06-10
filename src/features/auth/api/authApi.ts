@@ -36,3 +36,13 @@ export async function logoutRequest(refreshToken: string) {
   const res = await axiosClient.post<{ message?: string }>('/auth/logout', { refresh_token: refreshToken })
   return res.data
 }
+
+export async function requestPasswordResetRequest(email: string) {
+  const res = await axiosClient.post<{ message: string }>('/auth/request-password-reset', { email })
+  return res.data
+}
+
+export async function resetPasswordRequest(token: string, newPassword: string) {
+  const res = await axiosClient.post<{ message: string }>('/auth/reset-password', { token, new_password: newPassword })
+  return res.data
+}
