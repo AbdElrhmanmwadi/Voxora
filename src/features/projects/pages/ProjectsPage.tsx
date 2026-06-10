@@ -12,8 +12,14 @@ export default function ProjectsPage() {
   const nav = useNavigate()
 
   useEffect(() => {
-    const r = localStorage.getItem('rag_recent_projects')
-    if (r) setRecent(JSON.parse(r))
+    try {
+      const r = localStorage.getItem('rag_recent_projects')
+      if (!r) return
+      const parsed = JSON.parse(r)
+      if (Array.isArray(parsed)) setRecent(parsed.filter((item): item is string => typeof item === 'string'))
+    } catch {
+      // Corrupt localStorage entry; start with an empty list.
+    }
   }, [])
 
   function open() {
