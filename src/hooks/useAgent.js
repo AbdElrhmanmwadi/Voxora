@@ -1,5 +1,12 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import * as api from '../api/agent'
+
+function toList(data, key) {
+  if (Array.isArray(data)) return data
+  if (data && Array.isArray(data[key])) return data[key]
+  if (data && Array.isArray(data.data)) return data.data
+  return []
+}
 
 export default function useAgent(projectId) {
   const [messages, setMessages] = useState([])
@@ -8,13 +15,24 @@ export default function useAgent(projectId) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
+  // Ignore responses that arrive after the project changed.
+  const projectRef = useRef(projectId)
+
+  useEffect(() => {
+    projectRef.current = projectId
+    setMessages([])
+    setSessions([])
+    setCurrentSessionId(null)
+    setError(null)
+  }, [projectId])
+
   const loadSessions = useCallback(async () => {
     try {
       const data = await api.getSessions(projectId)
-      const sessionsList = Array.isArray(data) ? data : (data && (Array.isArray(data.sessions) ? data.sessions : data.data)) || []
-      setSessions(sessionsList)
+      if (projectRef.current !== projectId) return
+      setSessions(toList(data, 'sessions'))
     } catch (e) {
-      setError(e)
+      if (projectRef.current === projectId) setError(e)
     }
   }, [projectId])
 
@@ -23,11 +41,11 @@ export default function useAgent(projectId) {
       setIsLoading(true)
       try {
         const data = await api.getSessionMessages(projectId, sessionId)
-        const messagesList = Array.isArray(data) ? data : (data && (Array.isArray(data.messages) ? data.messages : data.data)) || []
-        setMessages(messagesList)
+        if (projectRef.current !== projectId) return
+        setMessages(toList(data, 'messages'))
         setCurrentSessionId(sessionId)
       } catch (e) {
-        setError(e)
+        if (projectRef.current === projectId) setError(e)
       } finally {
         setIsLoading(false)
       }
@@ -64,6 +82,7 @@ export default function useAgent(projectId) {
       setIsLoading(true)
       try {
         const res = await api.chatWithAgent(projectId, text, currentSessionId)
+        if (projectRef.current !== projectId) return res
         const assistantMsg = {
           role: 'assistant',
           content: res.answer || '',
@@ -76,8 +95,10 @@ export default function useAgent(projectId) {
         await loadSessions()
         return res
       } catch (e) {
-        setError(e)
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Error: ' + (e.message || 'Request failed') }])
+        if (projectRef.current === projectId) {
+          setError(e)
+          setMessages((prev) => [...prev, { role: 'assistant', content: 'Error: ' + (e.message || 'Request failed') }])
+        }
         throw e
       } finally {
         setIsLoading(false)

@@ -1,5 +1,5 @@
 import React from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, useParams } from 'react-router-dom'
 import ProjectsPage from './features/projects/pages/ProjectsPage'
 import ProjectDashboardPage from './features/projects/pages/ProjectDashboardPage'
 import FilesPage from './features/files/pages/FilesPage'
@@ -11,7 +11,6 @@ import ProtectedRoute from './core/auth/ProtectedRoute'
 import LoginPage from './features/auth/pages/LoginPage'
 import RegisterPage from './features/auth/pages/RegisterPage'
 import VerifyEmailPage from './features/auth/pages/VerifyEmailPage'
-import { useParams } from 'react-router-dom'
 import AgentChat from './components/AgentChat'
 
 function protectedPage(page: React.ReactNode) {

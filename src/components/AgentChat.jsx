@@ -6,14 +6,14 @@ import ChatInput from './ChatInput'
 
 export default function AgentChat({ projectId }) {
   const agent = useAgent(projectId)
+  const { loadSessions } = agent
 
   useEffect(() => {
-    agent.loadSessions()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId])
+    loadSessions()
+  }, [loadSessions])
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] overflow-hidden rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] text-white font-inter">
+    <div className="flex h-[calc(100vh-9rem)] overflow-hidden rounded-lg border border-[#2a2a2a] bg-[#0f0f0f] text-white font-sans">
       <SessionSidebar
         sessions={agent.sessions}
         currentSessionId={agent.currentSessionId}
