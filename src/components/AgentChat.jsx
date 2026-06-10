@@ -24,7 +24,11 @@ export default function AgentChat({ projectId }) {
       />
 
       <div className="flex-1 flex flex-col">
-        <ChatWindow messages={agent.messages} isLoading={agent.isLoading} />
+        <ChatWindow
+          messages={agent.messages}
+          isLoading={agent.isLoading}
+          error={agent.error ? agent.error.message || String(agent.error) : null}
+        />
         <ChatInput onSend={agent.sendMessage} disabled={agent.isLoading} />
       </div>
     </div>

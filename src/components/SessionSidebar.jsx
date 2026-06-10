@@ -1,4 +1,9 @@
 import React from 'react'
+import { sessionId } from '../hooks/useAgent'
+
+function sessionTitle(s) {
+  return s.title || s.name || s.first_message || 'Untitled'
+}
 
 export default function SessionSidebar({ sessions = [], currentSessionId, onLoadSession, onNewChat, onDelete, onRefresh }) {
   return (
@@ -13,21 +18,24 @@ export default function SessionSidebar({ sessions = [], currentSessionId, onLoad
 
       <div className="flex-1 overflow-auto space-y-2">
         {sessions.length === 0 && <div className="text-sm text-gray-400">No sessions yet</div>}
-        {sessions.map((s) => (
-          <div
-            key={s.session_id}
-            onClick={() => onLoadSession && onLoadSession(s.session_id)}
-            className={`group p-2 rounded cursor-pointer flex items-center justify-between ${s.session_id === currentSessionId ? 'bg-[#1f2937]' : 'hover:bg-[#0f1724]'}`}>
-            <div className="text-sm truncate">{s.title || 'Untitled'}</div>
-            <div className="opacity-0 group-hover:opacity-100">
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete && onDelete(s.session_id) }}
-                className="text-xs text-red-400 hover:text-red-600">
-                Delete
-              </button>
+        {sessions.map((s, idx) => {
+          const id = sessionId(s)
+          return (
+            <div
+              key={id ?? idx}
+              onClick={() => id != null && onLoadSession && onLoadSession(id)}
+              className={`group p-2 rounded cursor-pointer flex items-center justify-between ${id != null && String(id) === String(currentSessionId ?? '') ? 'bg-[#1f2937]' : 'hover:bg-[#0f1724]'}`}>
+              <div className="text-sm truncate">{sessionTitle(s)}</div>
+              <div className="opacity-0 group-hover:opacity-100">
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (id != null && onDelete) onDelete(id) }}
+                  className="text-xs text-red-400 hover:text-red-600">
+                  Delete
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </aside>
   )
