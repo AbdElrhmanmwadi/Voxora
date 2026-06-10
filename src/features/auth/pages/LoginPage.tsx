@@ -3,6 +3,7 @@ import { GoogleLogin } from '@react-oauth/google'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
 import Input from '../../../core/ui/Input'
+import PasswordInput from '../../../core/ui/PasswordInput'
 import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import Logo from '../../../core/ui/Logo'
@@ -98,7 +99,7 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2">
               <label className="field-label" htmlFor="password">Password</label>
-              <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <PasswordInput id="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
             {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
             <Button type="submit" className="w-full" disabled={busy}>
