@@ -34,6 +34,9 @@ interface FilesState {
   pushIndex: (projectId: string, doReset?: boolean) => Promise<void>
 }
 
+// Token to ignore responses from loadFiles calls that were superseded.
+let lastLoadToken = 0
+
 export const useFilesStore = create<FilesState>((set, get) => ({
   fileId: null,
   fileProjectId: null,
@@ -52,10 +55,8 @@ export const useFilesStore = create<FilesState>((set, get) => ({
     const state = get()
     // Prevent stale UI: when switching projects clear files & selections immediately
     const switching = state.filesProjectId !== projectId
-    // token to avoid race conditions where an earlier request resolves later
-    ;(get as any)._lastLoadToken = ((get as any)._lastLoadToken || 0) + 1
-    const token = (get as any)._lastLoadToken
-    console.debug('[useFilesStore] loadFiles start', { projectId, token, switching })
+    lastLoadToken += 1
+    const token = lastLoadToken
     set({
       isLoadingFiles: true,
       error: null,
@@ -76,7 +77,6 @@ export const useFilesStore = create<FilesState>((set, get) => ({
         } catch (e) {
           attempts += 1
           const isNotFound = e instanceof ApiClientError && e.status === 404
-          console.debug('[useFilesStore] listFiles error', { projectId, attempts, isNotFound, err: String(e) })
           if (!isNotFound) throw e
           if (attempts >= 3) {
             res = { signal: 'success', files: [] }
@@ -88,21 +88,16 @@ export const useFilesStore = create<FilesState>((set, get) => ({
       }
 
       // If another loadFiles was started after this one, ignore this response
-      if ((get as any)._lastLoadToken !== token) {
-        console.debug('[useFilesStore] ignoring stale loadFiles response', { projectId, token })
-        return
-      }
+      if (lastLoadToken !== token) return
 
       const selected = get().selectedFileIds.map((s) => String(s)).filter((id) => res.files.some((file) => String(file.file_id) === id))
       // compute outbound ids (asset names) for selected ids
       const outbound = selected.map((id) => res.files.find((f) => String(f.file_id) === id)?.file_name ?? id)
-      console.debug('[useFilesStore] loadFiles success', { projectId, filesCount: res.files.length, selectedCount: selected.length })
       set({ files: res.files, selectedFileIds: selected, selectedFileOutboundIds: outbound })
     } catch (e) {
-      console.debug('[useFilesStore] loadFiles failed', { projectId, err: String(e) })
-      set({ error: extractError(e as unknown), logs: [String(e), ...get().logs] })
+      set({ error: extractError(e), logs: [String(e), ...get().logs] })
     } finally {
-      set({ isLoadingFiles: false })
+      if (lastLoadToken === token) set({ isLoadingFiles: false })
     }
   },
   toggleFileSelection: (projectId, fileId) => {
@@ -112,8 +107,7 @@ export const useFilesStore = create<FilesState>((set, get) => ({
     // Single-selection behaviour: select only this file, or clear if it was already selected
     const selectedFileIds = current.includes(idStr) ? [] : [idStr]
     // sync outbound ids
-    const outbound = selectedFileIds.map((id) => get().files.find((f) => String(f.file_id) === id)?.file_name ?? id)
-    console.debug('[useFilesStore] toggleFileSelection', { projectId, fileId, selectedCount: selectedFileIds.length })
+    const outbound = selectedFileIds.map((id) => state.files.find((f) => String(f.file_id) === id)?.file_name ?? id)
     set({ filesProjectId: projectId, selectedFileIds, selectedFileOutboundIds: outbound })
     // persist last selected outbound id for this project so TranslatePage can autofill
     if (outbound.length > 0) saveProjectFileId(projectId, outbound[0])
@@ -121,30 +115,23 @@ export const useFilesStore = create<FilesState>((set, get) => ({
   setSelectedFileIds: (projectId, fileIds) => {
     const dedup = Array.from(new Set(fileIds.map((i) => String(i))))
     const outbound = dedup.map((id) => get().files.find((f) => String(f.file_id) === id)?.file_name ?? id)
-    console.debug('[useFilesStore] setSelectedFileIds', { projectId, fileIdsCount: fileIds.length })
     set({ filesProjectId: projectId, selectedFileIds: dedup, selectedFileOutboundIds: outbound })
     if (outbound.length > 0) saveProjectFileId(projectId, outbound[0])
   },
   clearSelectedFiles: (projectId) => {
-    console.debug('[useFilesStore] clearSelectedFiles', { projectId })
     set({ filesProjectId: projectId, selectedFileIds: [], selectedFileOutboundIds: [] })
-    try {
-      saveProjectFileId(projectId, '')
-    } catch {}
+    saveProjectFileId(projectId, '')
   },
   uploadFile: async (projectId, file) => {
-    console.debug('[useFilesStore] uploadFile start', { projectId, fileName: file.name })
     set({ isUploading: true, error: null })
     try {
       const res: UploadResponse = await api.uploadFile(projectId, file)
       saveProjectFileId(projectId, res.file_id)
       // Clear any previous fileId from other projects
       set({ fileId: res.file_id, fileProjectId: projectId, logs: [JSON.stringify(res), ...get().logs] })
-      console.debug('[useFilesStore] uploadFile succeeded', { projectId, fileId: res.file_id })
       await get().loadFiles(projectId)
     } catch (e) {
-      console.debug('[useFilesStore] uploadFile failed', { projectId, err: String(e) })
-      set({ error: extractError(e as unknown), logs: [String(e), ...get().logs] })
+      set({ error: extractError(e), logs: [String(e), ...get().logs] })
     } finally {
       set({ isUploading: false })
     }
@@ -154,41 +141,32 @@ export const useFilesStore = create<FilesState>((set, get) => ({
     const state = get()
     const requestedId = String(opts.file_id)
     const matchedFile = state.files.find((f) => f.file_id === requestedId || f.file_name === requestedId)
-    const outboundId = matchedFile ? matchedFile.file_name ?? requestedId : requestedId
+    const outboundId = matchedFile?.file_name ?? requestedId
     const coercedOpts = { ...opts, file_id: String(outboundId) }
-    console.debug('[useFilesStore] processFile start', { projectId, requestedId, outboundId, opts: coercedOpts })
     set({ isProcessing: true, error: null })
     try {
       // Validate file exists in current project files to avoid server 'File ID not found'
-      const projectMatches = state.filesProjectId === projectId
-      const fileExists = state.files.some((f) => f.file_id === requestedId || f.file_name === coercedOpts.file_id)
-      if (!fileExists) {
+      if (!matchedFile) {
         const msg = `File ID not found: ${coercedOpts.file_id}`
-        console.debug('[useFilesStore] processFile aborted - file not found', { projectId, fileId: coercedOpts.file_id })
         set({ error: msg, logs: [msg, ...get().logs] })
         return
       }
 
       const res: ProcessResponse = await api.processFile(projectId, coercedOpts)
-      console.debug('[useFilesStore] processFile success', { projectId, res })
       set({ logs: [JSON.stringify(res), ...get().logs] })
     } catch (e) {
-      console.debug('[useFilesStore] processFile failed', { projectId, err: String(e) })
-      set({ error: extractError(e as unknown), logs: [String(e), ...get().logs] })
+      set({ error: extractError(e), logs: [String(e), ...get().logs] })
     } finally {
       set({ isProcessing: false })
     }
   },
   pushIndex: async (projectId, doReset = false) => {
-    console.debug('[useFilesStore] pushIndex start', { projectId, doReset })
     set({ isIndexing: true, error: null })
     try {
       const res = await api.pushIndex(projectId, doReset)
-      console.debug('[useFilesStore] pushIndex success', { projectId, res })
       set({ logs: [JSON.stringify(res), ...get().logs] })
     } catch (e) {
-      console.debug('[useFilesStore] pushIndex failed', { projectId, err: String(e) })
-      set({ error: extractError(e as unknown), logs: [String(e), ...get().logs] })
+      set({ error: extractError(e), logs: [String(e), ...get().logs] })
     } finally {
       set({ isIndexing: false })
     }

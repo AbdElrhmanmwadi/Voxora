@@ -103,23 +103,21 @@ export default function FilesPage() {
               )}
               <ul className="space-y-2">
                 {files.map((file) => {
-                  const fileId = String(file.file_id)
-                  const checked = selectedFileIds.includes(fileId)
+                  const itemId = String(file.file_id)
+                  const checked = selectedFileIds.includes(itemId)
                   return (
                     <li key={file.file_id} className="rounded-md border bg-background p-3">
                       <label className="flex cursor-pointer items-start gap-3">
                         <input
                           type="checkbox"
                           checked={checked}
-                          onChange={() => toggleFileSelection(activeProjectId, fileId)}
+                          onChange={() => toggleFileSelection(activeProjectId, itemId)}
                           className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                         />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium">{file.file_name}</span>
                           <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                             <span>{formatFileSize(file.file_size)}</span>
-
-                            
                           </span>
                         </span>
                       </label>
@@ -192,7 +190,14 @@ export default function FilesPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
-                  onClick={() => processFile(activeProjectId, { file_id: processingFileId || '', chunk_size: chunkSize, overlap_size: overlap, do_reset: doReset })}
+                  onClick={() =>
+                    processFile(activeProjectId, {
+                      file_id: processingFileId || '',
+                      chunk_size: Number.isFinite(chunkSize) && chunkSize > 0 ? chunkSize : 500,
+                      overlap_size: Number.isFinite(overlap) && overlap >= 0 ? overlap : 0,
+                      do_reset: doReset
+                    })
+                  }
                   disabled={!processingFileId || isProcessing}
                 >
                   {isProcessing ? <><LoadingSpinner size={4} /> Processing</> : 'Process file'}
