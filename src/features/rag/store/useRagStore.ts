@@ -12,7 +12,7 @@ interface RagState {
   ask: (projectId: string, text: string, limit?: number, fileIds?: string[]) => Promise<void>
 }
 
-export const useRagStore = create<RagState>((set, get) => ({
+export const useRagStore = create<RagState>((set) => ({
   results: [],
   answer: null,
   loading: false,

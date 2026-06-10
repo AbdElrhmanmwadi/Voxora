@@ -54,13 +54,10 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
       const filesState = useFilesStore.getState()
       const matchedFile = filesState.files.find((f) => f.file_id === coercedFileIdInput || f.file_name === coercedFileIdInput)
       if (!matchedFile) {
-        const msg = `File ID not found for project ${projectId}: ${coercedFileIdInput}`
-        console.debug('[useTranslationStore] createJob aborted - file not found', { projectId, coercedFileId: coercedFileIdInput })
-        set({ error: msg })
+        set({ error: `File ID not found for project ${projectId}: ${coercedFileIdInput}` })
         return
       }
       const outboundFileId = matchedFile.file_name ?? coercedFileIdInput
-      console.debug('[useTranslationStore] createJob', { projectId, inputFileId: coercedFileIdInput, outboundFileId, source, target })
       const res = await api.createTranslation(projectId, String(outboundFileId), source, target)
       set({ jobId: res.job_id, status: res.status, resultFileId: null })
       persistTranslationJob(projectId, res.job_id, res.status)

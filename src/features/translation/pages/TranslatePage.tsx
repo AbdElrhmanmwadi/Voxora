@@ -79,21 +79,8 @@ export default function TranslatePage() {
 
   useEffect(() => {
     if (!suggestedFileId) return
-    console.debug('[TranslatePage] suggestedFileId -> setFileId', { projectId, suggestedFileId, urlFileId, uploadedFileId, uploadedProjectId, selectedFileIds })
     setFileId(suggestedFileId)
   }, [suggestedFileId])
-
-  useEffect(() => {
-    console.debug('[TranslatePage] state snapshot', {
-      projectId,
-      urlFileId,
-      fileId,
-      uploadedFileId,
-      uploadedProjectId,
-      selectedFileIds,
-      filesCount: files.length
-    })
-  }, [projectId, urlFileId, fileId, uploadedFileId, uploadedProjectId, selectedFileIds, files.length])
 
   useEffect(() => {
     if (projectId) restoreJob(projectId)
