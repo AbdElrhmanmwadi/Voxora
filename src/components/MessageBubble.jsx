@@ -72,23 +72,29 @@ export default function MessageBubble({ message, onRetry }) {
           </div>
         )}
 
-        {!isUser && (
+        {!isUser && (sources.length > 0 || trace.length > 0) && (
           <div className="mt-2 space-x-2 text-xs text-gray-400">
-            <button onClick={() => setShowSources((s) => !s)} className="underline">{showSources ? 'Hide Sources' : 'Show Sources'}</button>
-            <button onClick={() => setShowTrace((s) => !s)} className="underline">{showTrace ? 'Hide Trace' : 'Show Trace'}</button>
+            {sources.length > 0 && (
+              <button onClick={() => setShowSources((s) => !s)} className="underline">
+                {showSources ? 'Hide Sources' : `Sources (${sources.length})`}
+              </button>
+            )}
+            {trace.length > 0 && (
+              <button onClick={() => setShowTrace((s) => !s)} className="underline">
+                {showTrace ? 'Hide Trace' : `Trace (${trace.length})`}
+              </button>
+            )}
           </div>
         )}
 
         {!isUser && showSources && (
           <div className="mt-2">
-            {sources.length === 0 && <div className="text-xs text-gray-500">No sources</div>}
             {sources.map((s, i) => <SourceItem key={i} src={s} index={i} />)}
           </div>
         )}
 
         {!isUser && showTrace && (
           <div className="mt-2 text-xs text-gray-400">
-            {trace.length === 0 && <div>No trace</div>}
             {trace.map((t, i) => (
               <div key={i} className="p-2 border border-[#2a2a2a] rounded mb-2">
                 <div className="font-semibold">{t.name || t.signal || t.step || `step ${i + 1}`}</div>

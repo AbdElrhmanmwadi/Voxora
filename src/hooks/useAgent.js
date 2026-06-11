@@ -68,6 +68,8 @@ export default function useAgent(projectId) {
   const loadSession = useCallback(
     async (id) => {
       if (!id) return
+      // Switching conversations cancels any in-flight answer.
+      if (abortRef.current) abortRef.current.abort()
       setIsLoading(true)
       setError(null)
       try {
@@ -114,6 +116,8 @@ export default function useAgent(projectId) {
   }, [])
 
   const startNewChat = useCallback(() => {
+    // Starting over cancels any in-flight answer.
+    if (abortRef.current) abortRef.current.abort()
     setMessages([])
     setCurrentSessionId(null)
     setError(null)
@@ -156,13 +160,14 @@ export default function useAgent(projectId) {
         return [...base, { role: 'assistant', content: '', sources: [], tool_trace: [], streaming: true }]
       })
 
-      // The send box is disabled while streaming, so the placeholder we just
-      // appended stays the last message for the whole stream.
+      // Only ever patch a live streaming placeholder. If the user switched
+      // session / started a new chat meanwhile, the loaded messages have no
+      // `streaming` flag and stay untouched.
       const patchLast = (patch) => {
         if (projectRef.current !== projectId) return
         setMessages((prev) => {
           const last = prev[prev.length - 1]
-          if (!last || last.role !== 'assistant') return prev
+          if (!last || last.role !== 'assistant' || !last.streaming) return prev
           const next = [...prev]
           next[next.length - 1] = typeof patch === 'function' ? patch(last) : { ...last, ...patch }
           return next
