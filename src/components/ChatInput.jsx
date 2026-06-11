@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
-export default function ChatInput({ onSend, disabled }) {
+export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
   const [text, setText] = useState('')
   const taRef = useRef(null)
 
@@ -43,9 +43,15 @@ export default function ChatInput({ onSend, disabled }) {
           disabled={disabled}
         />
 
-        <button onClick={submit} disabled={disabled} className="bg-[#2563eb] px-4 rounded text-white">
-          Send
-        </button>
+        {isStreaming ? (
+          <button onClick={onStop} className="bg-red-700 hover:bg-red-600 px-4 rounded text-white">
+            Stop
+          </button>
+        ) : (
+          <button onClick={submit} disabled={disabled} className="bg-[#2563eb] px-4 rounded text-white disabled:opacity-50">
+            Send
+          </button>
+        )}
       </div>
     </div>
   )

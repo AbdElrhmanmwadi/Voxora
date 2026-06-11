@@ -45,10 +45,15 @@ export default function useAgent(projectId) {
   const [sessions, setSessions] = useState([])
   const [currentSessionId, setCurrentSessionId] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState(null)
 
   // Ignore responses that arrive after the project changed.
   const projectRef = useRef(projectId)
+  // In-flight stream, so "stop"/unmount/project switch can cancel it.
+  const abortRef = useRef(null)
+  // Last user text, so a failed answer can be retried with the same message.
+  const lastSentRef = useRef(null)
 
   const loadSessions = useCallback(async () => {
     try {
@@ -93,6 +98,7 @@ export default function useAgent(projectId) {
   // navigating away from the page and back does not lose the conversation.
   useEffect(() => {
     projectRef.current = projectId
+    if (abortRef.current) abortRef.current.abort()
     setMessages([])
     setSessions([])
     setCurrentSessionId(null)
@@ -101,6 +107,11 @@ export default function useAgent(projectId) {
     // Session ids are integers server-side; sessionStorage returns strings.
     if (saved) void loadSession(/^\d+$/.test(saved) ? Number(saved) : saved)
   }, [projectId, loadSession])
+
+  // Cancel any in-flight stream when the chat unmounts.
+  useEffect(() => () => {
+    if (abortRef.current) abortRef.current.abort()
+  }, [])
 
   const startNewChat = useCallback(() => {
     setMessages([])
@@ -127,52 +138,100 @@ export default function useAgent(projectId) {
   )
 
   const sendMessage = useCallback(
-    async (text) => {
+    async (text, { isRetry = false } = {}) => {
       if (!text) return
-      const userMsg = { role: 'user', content: text }
-      setMessages((prev) => [...prev, userMsg])
-      setIsLoading(true)
+      lastSentRef.current = text
+      const controller = new AbortController()
+      abortRef.current = controller
+
       setError(null)
+      setIsLoading(true)
+      setIsStreaming(true)
+      setMessages((prev) => {
+        // On retry drop the failed bubble and re-send the same user message
+        // (the backend does not save partial answers, so nothing is duplicated).
+        const base = isRetry
+          ? prev.filter((m, i) => !(i === prev.length - 1 && m.role === 'assistant' && m.failed))
+          : [...prev, { role: 'user', content: text }]
+        return [...base, { role: 'assistant', content: '', sources: [], tool_trace: [], streaming: true }]
+      })
+
+      // The send box is disabled while streaming, so the placeholder we just
+      // appended stays the last message for the whole stream.
+      const patchLast = (patch) => {
+        if (projectRef.current !== projectId) return
+        setMessages((prev) => {
+          const last = prev[prev.length - 1]
+          if (!last || last.role !== 'assistant') return prev
+          const next = [...prev]
+          next[next.length - 1] = typeof patch === 'function' ? patch(last) : { ...last, ...patch }
+          return next
+        })
+      }
+
       try {
-        const res = await api.chatWithAgent(projectId, text, currentSessionId)
-        if (projectRef.current !== projectId) return res
-        const assistantMsg = {
-          role: 'assistant',
-          content: res.answer || '',
-          sources: res.sources || [],
-          tool_trace: res.tool_trace || [],
-        }
-        setMessages((prev) => [...prev, assistantMsg])
-        if (res.session_id) {
-          setCurrentSessionId(res.session_id)
-          saveSessionId(projectId, res.session_id)
-        }
+        await api.streamChat(
+          projectId,
+          { message: text, sessionId: currentSessionId },
+          {
+            onMeta: (m) => {
+              if (projectRef.current !== projectId) return
+              if (m && m.session_id) {
+                setCurrentSessionId(m.session_id)
+                saveSessionId(projectId, m.session_id)
+              }
+              // Sources arrive before the first token; render them right away.
+              patchLast({ sources: (m && m.sources) || [], tool_trace: (m && m.tool_trace) || [] })
+            },
+            onDelta: (chunk) => patchLast((last) => ({ ...last, content: last.content + chunk })),
+            // done.answer == concatenated deltas; replacing guards against a dropped chunk.
+            onDone: (answer) => patchLast({ content: answer, streaming: false }),
+            // The failed bubble (with Retry) is the error surface for sends;
+            // the top-level error banner stays for session-load failures.
+            onError: (detail) => patchLast({ streaming: false, failed: true, error: detail }),
+          },
+          controller.signal
+        )
         // refresh sessions list to include new/updated session
-        await loadSessions()
-        return res
+        if (projectRef.current === projectId) await loadSessions()
       } catch (e) {
-        if (projectRef.current === projectId) {
-          setError(e)
-          setMessages((prev) => [...prev, { role: 'assistant', content: 'Error: ' + (e.message || 'Request failed') }])
+        if (e && e.name === 'AbortError') {
+          patchLast((last) => ({ ...last, streaming: false, failed: true, error: 'Stopped' }))
+        } else {
+          patchLast((last) => ({ ...last, streaming: false, failed: true, error: e.message || 'Request failed' }))
         }
-        throw e
       } finally {
-        setIsLoading(false)
+        abortRef.current = null
+        if (projectRef.current === projectId) {
+          setIsLoading(false)
+          setIsStreaming(false)
+        }
       }
     },
     [projectId, currentSessionId, loadSessions]
   )
+
+  const stopStreaming = useCallback(() => {
+    if (abortRef.current) abortRef.current.abort()
+  }, [])
+
+  const retryLast = useCallback(() => {
+    if (lastSentRef.current && !abortRef.current) void sendMessage(lastSentRef.current, { isRetry: true })
+  }, [sendMessage])
 
   return {
     messages,
     sessions,
     currentSessionId,
     isLoading,
+    isStreaming,
     error,
     loadSessions,
     loadSession,
     deleteSession,
     startNewChat,
     sendMessage,
+    stopStreaming,
+    retryLast,
   }
 }

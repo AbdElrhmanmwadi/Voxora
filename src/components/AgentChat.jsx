@@ -28,8 +28,14 @@ export default function AgentChat({ projectId }) {
           messages={agent.messages}
           isLoading={agent.isLoading}
           error={agent.error ? agent.error.message || String(agent.error) : null}
+          onRetry={agent.retryLast}
         />
-        <ChatInput onSend={agent.sendMessage} disabled={agent.isLoading} />
+        <ChatInput
+          onSend={agent.sendMessage}
+          disabled={agent.isLoading}
+          isStreaming={agent.isStreaming}
+          onStop={agent.stopStreaming}
+        />
       </div>
     </div>
   )
