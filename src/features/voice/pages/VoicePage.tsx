@@ -12,8 +12,8 @@ import StatusBadge from '../../../core/components/StatusBadge'
 export default function VoicePage() {
   const { projectId } = useParams()
   const activeProjectId = projectId ?? ''
-  const { start, stop, recording } = useAudioRecorder()
-  const { transcript, answer, audioUrl, loading, error, sendAudio } = useVoiceStore()
+  const { start, stop: stopRecording, recording } = useAudioRecorder()
+  const { transcript, answer, streaming, failed, error, sendAudio, retry, stop: stopStream } = useVoiceStore()
   const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
   const [lastBlobUrl, setLastBlobUrl] = useState<string | null>(null)
 
@@ -33,8 +33,11 @@ export default function VoicePage() {
     }
   }, [lastBlobUrl])
 
+  // Cancel any in-flight stream (and stop playback) when leaving the page.
+  useEffect(() => () => stopStream(), [stopStream])
+
   async function handleStop() {
-    const blob = await stop()
+    const blob = await stopRecording()
     const url = URL.createObjectURL(blob)
     setLastBlobUrl(url)
     if (!hasSelectedFiles) return
@@ -49,7 +52,7 @@ export default function VoicePage() {
           <h1 className="page-title">Speak to project {activeProjectId}</h1>
           <p className="page-description">Record a voice question and answer it using only selected project files.</p>
         </div>
-        <StatusBadge status={recording ? 'loading' : transcript ? 'success' : 'idle'} />
+        <StatusBadge status={recording || streaming ? 'loading' : transcript ? 'success' : 'idle'} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
@@ -77,15 +80,19 @@ export default function VoicePage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className={recording ? 'h-2.5 w-2.5 rounded-full bg-destructive animate-pulse-soft' : 'h-2.5 w-2.5 rounded-full bg-muted-foreground'} />
-                    <p className="text-sm font-medium">{recording ? 'Recording in progress' : 'Recorder ready'}</p>
+                    <p className="text-sm font-medium">{recording ? 'Recording in progress' : streaming ? 'Answering...' : 'Recorder ready'}</p>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">Microphone access is requested by the existing recorder hook.</p>
                 </div>
                 <div className="flex gap-3">
-                  <Button onClick={() => start()} disabled={recording || !hasSelectedFiles}>Record</Button>
-                  <Button onClick={handleStop} disabled={!recording} variant="outline">
-                    {!recording ? 'Stop' : <><LoadingSpinner size={4} /> Stop</>}
-                  </Button>
+                  <Button onClick={() => start()} disabled={recording || streaming || !hasSelectedFiles}>Record</Button>
+                  {streaming ? (
+                    <Button onClick={stopStream} variant="outline">Stop</Button>
+                  ) : (
+                    <Button onClick={handleStop} disabled={!recording} variant="outline">
+                      {!recording ? 'Stop' : <><LoadingSpinner size={4} /> Stop</>}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -100,8 +107,17 @@ export default function VoicePage() {
 
         <AppCard title="Transcript">
           <div className="space-y-3">
-            {loading && <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">Processing audio...</div>}
-            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+            {streaming && !transcript && (
+              <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">Processing audio...</div>
+            )}
+            {error && (
+              <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <span>{error}</span>
+                {failed && (
+                  <Button onClick={() => void retry()} variant="outline" className="shrink-0">Retry</Button>
+                )}
+              </div>
+            )}
             {transcript ? (
               <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{transcript}</div>
             ) : (
@@ -113,12 +129,12 @@ export default function VoicePage() {
 
       <AppCard title="Answer">
         {answer ? (
-          <div className="space-y-3">
-            <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{answer}</div>
-            {audioUrl && (
-              <audio key={audioUrl} src={audioUrl} controls autoPlay className="w-full" />
-            )}
+          <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">
+            {answer}
+            {streaming && <span className="ml-0.5 inline-block h-4 w-2 animate-pulse-soft bg-foreground/60 align-middle" />}
           </div>
+        ) : streaming ? (
+          <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">Generating answer...</div>
         ) : (
           <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No answer generated yet.</div>
         )}

@@ -20,18 +20,15 @@ export interface MappedVoiceError {
   transcript?: string
 }
 
-// The backend now returns generic human messages on purpose, so we branch on
-// HTTP status + `signal` (never the message text) to produce friendly copy.
-export function mapVoiceError(e: unknown): MappedVoiceError {
-  if (!(e instanceof ApiClientError)) {
-    return { message: e instanceof Error ? e.message : 'Something went wrong. Please try again.' }
-  }
-
-  const body = (e.data ?? {}) as VoiceErrorBody
-  const signal = body.signal
-  const transcript = body.transcript
-
-  switch (e.status) {
+// The backend returns generic human messages on purpose, so we branch on HTTP
+// status + `signal` (never the message text) to produce friendly copy. Shared
+// by both the axios path (mapVoiceError) and the streaming fetch path.
+export function mapVoiceStatus(
+  status: number | undefined,
+  signal?: VoiceSignal,
+  transcript?: string
+): MappedVoiceError {
+  switch (status) {
     case 401:
       return { message: 'Your session expired. Please sign in again.', signal, transcript }
     case 404:
@@ -56,4 +53,13 @@ export function mapVoiceError(e: unknown): MappedVoiceError {
     default:
       return { message: 'Something went wrong. Please try again.', signal, transcript }
   }
+}
+
+// Maps an error thrown through the axios client (which carries status + body).
+export function mapVoiceError(e: unknown): MappedVoiceError {
+  if (!(e instanceof ApiClientError)) {
+    return { message: e instanceof Error ? e.message : 'Something went wrong. Please try again.' }
+  }
+  const body = (e.data ?? {}) as VoiceErrorBody
+  return mapVoiceStatus(e.status, body.signal, body.transcript)
 }
