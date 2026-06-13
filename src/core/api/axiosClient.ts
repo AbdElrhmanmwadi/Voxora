@@ -7,11 +7,15 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
 
 export class ApiClientError extends Error {
   status?: number
+  // Raw response body, so callers can branch on a backend `signal` field
+  // instead of parsing the (now intentionally generic) human message.
+  data?: unknown
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, data?: unknown) {
     super(message)
     this.name = 'ApiClientError'
     this.status = status
+    this.data = data
   }
 }
 
@@ -60,7 +64,7 @@ function toApiError(error: unknown) {
         }
       }
     }
-    return new ApiClientError(message, error.response?.status)
+    return new ApiClientError(message, error.response?.status, data)
   }
   if (error instanceof Error) return error
   return new Error('Unknown error')

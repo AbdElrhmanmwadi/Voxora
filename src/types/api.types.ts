@@ -65,8 +65,22 @@ export interface TranslationJobStatusResponse {
   };
 }
 
+// `signal` values the voice endpoints can return, including the validation
+// failures the hardened backend now emits before processing.
+export type VoiceSignal =
+  | 'stt_success'
+  | 'stt_failed'
+  | 'stt_timeout'
+  | 'tts_failed'
+  | 'voice_chat_success'
+  | 'voice_chat_failed'
+  | 'voice_chat_timeout'
+  | 'rag_answer_failed'
+  | 'file_type_not_supported'
+  | 'file_size_exceeded'
+
 export interface SttResponse {
-  signal: 'stt_success' | 'stt_failed' | 'stt_timeout';
+  signal: VoiceSignal;
   text?: string;
   language?: string;
   duration_ms?: number;
@@ -74,12 +88,12 @@ export interface SttResponse {
 }
 
 export interface VoiceChatResponse {
-  signal: 'voice_chat_success' | 'voice_chat_failed' | 'voice_chat_timeout' | 'rag_answer_failed' | 'stt_failed';
+  // full_prompt / chat_history were removed by the backend (they leaked the
+  // internal prompt and raw retrieved context) — do not read them.
+  signal: VoiceSignal;
   transcript?: string;
   answer?: string;
   audio_base64?: string;
   audio_mime_type?: string;
-  full_prompt?: string;
-  chat_history?: unknown[];
   message?: string;
 }

@@ -13,7 +13,7 @@ export default function VoicePage() {
   const { projectId } = useParams()
   const activeProjectId = projectId ?? ''
   const { start, stop, recording } = useAudioRecorder()
-  const { transcript, answer, loading, error, sendAudio } = useVoiceStore()
+  const { transcript, answer, audioUrl, loading, error, sendAudio } = useVoiceStore()
   const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
   const [lastBlobUrl, setLastBlobUrl] = useState<string | null>(null)
 
@@ -38,7 +38,7 @@ export default function VoicePage() {
     const url = URL.createObjectURL(blob)
     setLastBlobUrl(url)
     if (!hasSelectedFiles) return
-    await sendAudio(activeProjectId, blob, selectedFileIds)
+    await sendAudio(activeProjectId, blob)
   }
 
   return (
@@ -113,7 +113,12 @@ export default function VoicePage() {
 
       <AppCard title="Answer">
         {answer ? (
-          <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{answer}</div>
+          <div className="space-y-3">
+            <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{answer}</div>
+            {audioUrl && (
+              <audio key={audioUrl} src={audioUrl} controls autoPlay className="w-full" />
+            )}
+          </div>
         ) : (
           <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No answer generated yet.</div>
         )}
