@@ -32,14 +32,14 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry })
   const streamingNow = Boolean(last && last.role === 'assistant' && last.streaming)
 
   return (
-    <div className="flex-1 p-4 overflow-y-auto" ref={ref} onScroll={handleScroll} style={{ background: '#0f0f0f' }}>
+    <div className="flex-1 overflow-y-auto bg-background p-4" ref={ref} onScroll={handleScroll}>
       {error && error !== dismissedError && (
-        <div className="mb-3 flex items-start justify-between gap-3 rounded border border-red-900 bg-red-950/40 p-2 text-sm text-red-300">
+        <div className="mb-3 flex items-start justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-sm text-destructive">
           <span>{error}</span>
           <button
             onClick={() => setDismissedError(error)}
             aria-label="Dismiss error"
-            className="shrink-0 text-red-400 hover:text-red-200"
+            className="shrink-0 opacity-70 hover:opacity-100"
           >
             ✕
           </button>
@@ -47,8 +47,8 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry })
       )}
       {messages.length === 0 && !isLoading && (
         <div className="flex h-full flex-col items-center justify-center gap-1 text-center">
-          <div className="text-gray-300">Ask anything about this project</div>
-          <div className="text-sm text-gray-500">The agent answers from the project&apos;s indexed knowledge. Pick a previous chat or just start typing below.</div>
+          <div className="font-medium text-foreground">Ask anything about this project</div>
+          <div className="max-w-sm text-sm text-muted-foreground">The agent answers from the project&apos;s indexed knowledge. Pick a previous chat or just start typing below.</div>
         </div>
       )}
 
@@ -57,7 +57,7 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry })
           <MessageBubble key={idx} message={m} onRetry={idx === messages.length - 1 ? onRetry : undefined} />
         ))}
         {isLoading && !streamingNow && (
-          <div className="text-sm text-gray-400">{messages.length === 0 ? 'Loading conversation…' : 'Assistant is typing…'}</div>
+          <div className="text-sm text-muted-foreground">{messages.length === 0 ? 'Loading conversation…' : 'Assistant is typing…'}</div>
         )}
       </div>
     </div>

@@ -44,7 +44,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
   const nearLimit = text.length > MAX_LEN - 1000
 
   return (
-    <div className="p-3 border-t border-[#2a2a2a] bg-[#111111]">
+    <div className="border-t bg-card p-3">
       <div className="flex items-end gap-2">
         <textarea
           ref={taRef}
@@ -54,28 +54,28 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
           placeholder="Ask the agent..."
           dir="auto"
           maxLength={MAX_LEN}
-          className="flex-1 resize-none overflow-y-auto bg-[#1a1a1a] text-white p-2 rounded outline-none"
+          className="flex-1 resize-none overflow-y-auto rounded-md border border-input bg-background p-2 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           rows={1}
         />
 
         {isStreaming ? (
-          <button onClick={onStop} className="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-white">
+          <button onClick={onStop} className="rounded-md bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90">
             Stop
           </button>
         ) : (
           <button
             onClick={submit}
             disabled={!canSend || !text.trim()}
-            className="bg-[#2563eb] px-4 py-2 rounded text-white disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             Send
           </button>
         )}
       </div>
-      <div className="mt-1 flex justify-between text-[11px] text-gray-500">
+      <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
         <span>Enter to send · Shift+Enter for a new line</span>
         {nearLimit && (
-          <span className={text.length >= MAX_LEN ? 'text-red-400' : ''}>
+          <span className={text.length >= MAX_LEN ? 'text-destructive' : ''}>
             {text.length}/{MAX_LEN}
           </span>
         )}

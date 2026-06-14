@@ -23,17 +23,17 @@ function SourceItem({ src, index }) {
   const page = src.metadata && src.metadata.page
   const hasScore = typeof src.score === 'number'
   return (
-    <div className="p-2 border border-[#2a2a2a] rounded mb-2">
+    <div className="mb-2 rounded-md border bg-background p-2">
       <div className="flex items-center justify-between gap-2">
-        <div className="text-xs text-gray-300 truncate">
+        <div className="truncate text-xs font-medium text-foreground">
           {sourceTitle(src, index)}
-          {page != null && <span className="text-gray-500"> · p.{page}</span>}
+          {page != null && <span className="text-muted-foreground"> · p.{page}</span>}
         </div>
         {hasScore && (
-          <span className="text-xs text-gray-500 shrink-0">{src.score.toFixed(3)}</span>
+          <span className="shrink-0 text-xs text-muted-foreground">{src.score.toFixed(3)}</span>
         )}
       </div>
-      <div className="text-sm text-gray-200 whitespace-pre-wrap break-words mt-1">{sourcePreview(src)}</div>
+      <div className="mt-1 whitespace-pre-wrap break-words text-sm text-muted-foreground">{sourcePreview(src)}</div>
     </div>
   )
 }
@@ -50,9 +50,9 @@ export default function MessageBubble({ message, onRetry }) {
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`${isUser ? 'bg-[#2563eb] text-white' : `bg-[#1a1a1a] text-gray-200 border ${failed ? 'border-red-900' : 'border-[#2a2a2a]'}`} max-w-[75%] p-3 rounded-lg shadow-sm animate-fade-in`}>
+      <div className={`${isUser ? 'bg-primary text-primary-foreground' : `bg-muted text-foreground border ${failed ? 'border-destructive/40' : 'border-border'}`} max-w-[75%] animate-fade-in rounded-lg p-3 shadow-sm`}>
         {/* dir="auto" lets Arabic answers flow RTL while keeping English LTR */}
-        <div className="prose prose-invert break-words" dir="auto">
+        <div className="break-words" dir="auto">
           {isUser ? (
             <div className="whitespace-pre-wrap">{message.content}</div>
           ) : (
@@ -64,16 +64,16 @@ export default function MessageBubble({ message, onRetry }) {
         </div>
 
         {failed && (
-          <div className="mt-2 flex items-center gap-2 text-xs text-red-300">
+          <div className="mt-2 flex items-center gap-2 text-xs text-destructive">
             <span>{message.error || 'Failed to get an answer'}</span>
             {onRetry && (
-              <button onClick={onRetry} className="underline hover:text-red-200">Retry</button>
+              <button onClick={onRetry} className="underline underline-offset-2 hover:opacity-80">Retry</button>
             )}
           </div>
         )}
 
         {!isUser && (sources.length > 0 || trace.length > 0) && (
-          <div className="mt-2 space-x-2 text-xs text-gray-400">
+          <div className="mt-2 space-x-2 text-xs text-muted-foreground">
             {sources.length > 0 && (
               <button onClick={() => setShowSources((s) => !s)} className="underline">
                 {showSources ? 'Hide Sources' : `Sources (${sources.length})`}
@@ -94,9 +94,9 @@ export default function MessageBubble({ message, onRetry }) {
         )}
 
         {!isUser && showTrace && (
-          <div className="mt-2 text-xs text-gray-400">
+          <div className="mt-2 text-xs text-muted-foreground">
             {trace.map((t, i) => (
-              <div key={i} className="p-2 border border-[#2a2a2a] rounded mb-2">
+              <div key={i} className="mb-2 rounded-md border bg-background p-2">
                 <div className="font-semibold">{t.name || t.signal || t.step || `step ${i + 1}`}</div>
                 <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(t, null, 2)}</pre>
               </div>
