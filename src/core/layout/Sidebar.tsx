@@ -21,7 +21,10 @@ function NavItem({ to, children, end = false }: { to: string; children: React.Re
 
 export default function Sidebar() {
   const { projectId } = useParams()
-  const base = projectId ? `/projects/${projectId}` : '/projects/1'
+  // Project-scoped links only render when a project is actually in context.
+  // Never fabricate a project id (previously defaulted to /projects/1, which
+  // silently routed users into a project that may not be theirs or 404s).
+  const base = projectId ? `/projects/${projectId}` : null
 
   return (
     <nav className="sticky top-20 space-y-4">
@@ -29,20 +32,28 @@ export default function Sidebar() {
         <div className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Workspace</div>
         <div className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-1 md:overflow-visible md:pb-0">
           <NavItem to="/" end>Projects</NavItem>
-          <NavItem to={base} end>Overview</NavItem>
-          <NavItem to={`${base}/ask`}>Ask AI</NavItem>
-          <NavItem to={`${base}/agent`}>Agent Chat</NavItem>
-          <NavItem to={`${base}/translate`}>Translate</NavItem>
-          <NavItem to={`${base}/voice`}>Voice</NavItem>
+          {base ? (
+            <>
+              <NavItem to={base} end>Overview</NavItem>
+              <NavItem to={`${base}/ask`}>Ask AI</NavItem>
+              <NavItem to={`${base}/agent`}>Agent Chat</NavItem>
+              <NavItem to={`${base}/translate`}>Translate</NavItem>
+              <NavItem to={`${base}/voice`}>Voice</NavItem>
+            </>
+          ) : (
+            <p className="px-3 py-2 text-xs leading-5 text-muted-foreground">Open a project to access its tools.</p>
+          )}
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-2 shadow-sm">
-        <div className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Library</div>
-        <div className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-1 md:overflow-visible md:pb-0">
-          <NavItem to={`${base}/files`}>Files</NavItem>
+      {base && (
+        <div className="rounded-lg border bg-card p-2 shadow-sm">
+          <div className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Library</div>
+          <div className="flex gap-1 overflow-x-auto pb-1 md:block md:space-y-1 md:overflow-visible md:pb-0">
+            <NavItem to={`${base}/files`}>Files</NavItem>
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   )
 }
