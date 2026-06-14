@@ -6,6 +6,8 @@ import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import Button from '../../../core/ui/Button'
 import Input from '../../../core/ui/Input'
 import Badge from '../../../core/ui/Badge'
+import Progress from '../../../core/ui/Progress'
+import EmptyState from '../../../core/ui/EmptyState'
 import StatusBadge from '../../../core/components/StatusBadge'
 
 function formatFileSize(size: number) {
@@ -36,6 +38,7 @@ export default function FilesPage() {
     selectedFileOutboundIds,
     isLoadingFiles,
     isUploading,
+    uploadProgress,
     isProcessing,
     isIndexing,
     loadFiles,
@@ -97,9 +100,7 @@ export default function FilesPage() {
 
               {isLoadingFiles && <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">Loading project files...</div>}
               {!isLoadingFiles && files.length === 0 && (
-                <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
-                  No files found for this project yet.
-                </div>
+                <EmptyState title="No files yet" description="Upload a source file below to start building this project's index." />
               )}
               <ul className="space-y-2">
                 {files.map((file) => {
@@ -115,9 +116,17 @@ export default function FilesPage() {
                           className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium">{file.file_name}</span>
+                          <span className="flex items-center gap-2">
+                            <span className="block truncate text-sm font-medium">{file.file_name}</span>
+                            {file.processed ? (
+                              <Badge variant="success">Processed</Badge>
+                            ) : (
+                              <Badge variant="warning">Not processed</Badge>
+                            )}
+                          </span>
                           <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
                             <span>{formatFileSize(file.file_size)}</span>
+                            {file.processed && <span>· {file.chunk_count ?? 0} chunks</span>}
                           </span>
                         </span>
                       </label>
@@ -144,6 +153,14 @@ export default function FilesPage() {
               <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || isUploading || !activeProjectId}>
                 {isUploading ? <><LoadingSpinner size={4} /> Uploading</> : 'Upload file'}
               </Button>
+              {isUploading && uploadProgress !== null && (
+                <div className="space-y-1" aria-live="polite">
+                  <Progress value={uploadProgress} aria-label="Upload progress" />
+                  <p className="field-hint">
+                    {uploadProgress < 100 ? `Uploading… ${uploadProgress}%` : 'Upload complete — finalizing on server…'}
+                  </p>
+                </div>
+              )}
             </div>
           </AppCard>
 
@@ -219,7 +236,7 @@ export default function FilesPage() {
             <div className="flex items-center justify-between">
               <Badge variant="secondary">{logs.length} events</Badge>
             </div>
-            <ul className="log-panel">
+            <ul className="log-panel" aria-label="Activity log" aria-live="polite">
               {logs.length === 0 && <li>No activity yet.</li>}
               {logs.map((l, i) => (
                 <li key={i} className="break-words">{l}</li>

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { UploadResponse, ProcessResponse, ProjectFile } from '../../../types/api.types'
 import * as api from '../api/filesApi'
 import { extractError } from '../../../core/api/apiException'
+import { toast } from '../../../core/ui/toast'
 import { saveProjectFileId } from '../fileIdStorage'
 import { ApiClientError } from '../../../core/api/axiosClient'
 
@@ -20,6 +21,7 @@ interface FilesState {
   selectedFileIds: string[]
   selectedFileOutboundIds: string[]
   isUploading: boolean
+  uploadProgress: number | null
   isLoadingFiles: boolean
   isProcessing: boolean
   isIndexing: boolean
@@ -45,6 +47,7 @@ export const useFilesStore = create<FilesState>((set, get) => ({
   selectedFileIds: [],
   selectedFileOutboundIds: [],
   isUploading: false,
+  uploadProgress: null,
   isLoadingFiles: false,
   isProcessing: false,
   isIndexing: false,
@@ -123,17 +126,22 @@ export const useFilesStore = create<FilesState>((set, get) => ({
     saveProjectFileId(projectId, '')
   },
   uploadFile: async (projectId, file) => {
-    set({ isUploading: true, error: null })
+    set({ isUploading: true, uploadProgress: 0, error: null })
     try {
-      const res: UploadResponse = await api.uploadFile(projectId, file)
+      const res: UploadResponse = await api.uploadFile(projectId, file, (percent) =>
+        set({ uploadProgress: percent })
+      )
       saveProjectFileId(projectId, res.file_id)
       // Clear any previous fileId from other projects
       set({ fileId: res.file_id, fileProjectId: projectId, logs: [JSON.stringify(res), ...get().logs] })
       await get().loadFiles(projectId)
+      toast.success('File uploaded', file.name)
     } catch (e) {
-      set({ error: extractError(e), logs: [String(e), ...get().logs] })
+      const message = extractError(e)
+      set({ error: message, logs: [String(e), ...get().logs] })
+      toast.error('Upload failed', message)
     } finally {
-      set({ isUploading: false })
+      set({ isUploading: false, uploadProgress: null })
     }
   },
   processFile: async (projectId, opts) => {
@@ -149,13 +157,17 @@ export const useFilesStore = create<FilesState>((set, get) => ({
       if (!matchedFile) {
         const msg = `File ID not found: ${coercedOpts.file_id}`
         set({ error: msg, logs: [msg, ...get().logs] })
+        toast.error('Cannot process file', msg)
         return
       }
 
       const res: ProcessResponse = await api.processFile(projectId, coercedOpts)
       set({ logs: [JSON.stringify(res), ...get().logs] })
+      toast.success('File processed', `${res.inserted_chunks} chunks inserted`)
     } catch (e) {
-      set({ error: extractError(e), logs: [String(e), ...get().logs] })
+      const message = extractError(e)
+      set({ error: message, logs: [String(e), ...get().logs] })
+      toast.error('Processing failed', message)
     } finally {
       set({ isProcessing: false })
     }
@@ -165,8 +177,11 @@ export const useFilesStore = create<FilesState>((set, get) => ({
     try {
       const res = await api.pushIndex(projectId, doReset)
       set({ logs: [JSON.stringify(res), ...get().logs] })
+      toast.success(doReset ? 'Index reset and rebuilt' : 'Index updated')
     } catch (e) {
-      set({ error: extractError(e), logs: [String(e), ...get().logs] })
+      const message = extractError(e)
+      set({ error: message, logs: [String(e), ...get().logs] })
+      toast.error('Indexing failed', message)
     } finally {
       set({ isIndexing: false })
     }
