@@ -6,11 +6,18 @@ export async function listFiles(projectId: string): Promise<FileListResponse> {
   return res.data as FileListResponse
 }
 
-export async function uploadFile(projectId: string, file: File): Promise<UploadResponse> {
+export async function uploadFile(
+  projectId: string,
+  file: File,
+  onProgress?: (percent: number) => void
+): Promise<UploadResponse> {
   const fd = new FormData()
   fd.append('file', file)
   const res = await axiosClient.post(`/api/v1/data/upload/${projectId}`, fd, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (event) => {
+      if (onProgress && event.total) onProgress(Math.round((event.loaded / event.total) * 100))
+    }
   })
   return res.data as UploadResponse
 }
