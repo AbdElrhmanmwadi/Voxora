@@ -9,6 +9,21 @@ import Input from '../../../core/ui/Input'
 import Textarea from '../../../core/ui/Textarea'
 import Badge from '../../../core/ui/Badge'
 import Skeleton from '../../../core/ui/Skeleton'
+import EmptyState from '../../../core/ui/EmptyState'
+import { toast } from '../../../core/ui/toast'
+import type { SearchResultItem } from '../../../types/api.types'
+
+// `meta_data` shape varies by how a document was processed, so probe a few of
+// the keys the backend is known to emit and surface whatever provenance exists.
+function sourceFrom(meta: SearchResultItem['meta_data']) {
+  const get = (key: string) => {
+    const v = meta?.[key]
+    return typeof v === 'string' || typeof v === 'number' ? String(v) : undefined
+  }
+  const file = get('file_name') ?? get('source') ?? get('file_id')
+  const page = get('page') ?? get('page_number')
+  return { file, page }
+}
 
 export default function AskPage() {
   const { projectId } = useParams()
@@ -95,25 +110,50 @@ export default function AskPage() {
                 <Skeleton className="h-20" />
               </div>
             )}
-            {!loading && results.length === 0 && <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No results yet. Run a search to inspect matching context.</div>}
+            {!loading && results.length === 0 && (
+              <EmptyState title="No results yet" description="Run a search to inspect the matching context from your selected files." />
+            )}
             <ul className="space-y-3">
-              {results.map((r, i) => (
-                <li key={i} className="rounded-md border bg-background p-4">
-                  <div className="mb-2 flex items-center justify-between gap-3">
-                    <Badge variant="outline">Score {r.score}</Badge>
-                  </div>
-                  <p className="text-sm leading-6 text-muted-foreground">{r.text}</p>
-                </li>
-              ))}
+              {results.map((r, i) => {
+                const { file, page } = sourceFrom(r.meta_data)
+                return (
+                  <li key={i} className="rounded-md border bg-background p-4">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">#{i + 1}</Badge>
+                      {file && <Badge variant="outline" className="max-w-full truncate">{file}</Badge>}
+                      {page && <Badge variant="outline">p. {page}</Badge>}
+                      <Badge variant="outline" className="ml-auto">Score {typeof r.score === 'number' ? r.score.toFixed(3) : r.score}</Badge>
+                    </div>
+                    <p className="text-sm leading-6 text-muted-foreground">{r.text}</p>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         </AppCard>
 
         <AppCard title="Answer">
           {answer ? (
-            <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{answer}</div>
+            <div className="space-y-3">
+              <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{answer}</div>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Grounded in {selectedFiles.length} selected {selectedFiles.length === 1 ? 'file' : 'files'}
+                  {selectedFiles.length > 0 && `: ${selectedFiles.map((f) => f.file_name).join(', ')}`}
+                </p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(answer).then(() => toast.success('Answer copied'))
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
           ) : (
-            <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No answer generated yet.</div>
+            <EmptyState title="No answer generated yet" description="Ask a question to generate a grounded answer." />
           )}
         </AppCard>
       </div>
