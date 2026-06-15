@@ -9,6 +9,9 @@ export interface ProjectFile {
   file_size: number;
   file_type?: string;
   file_path?: string;
+  // Number of indexed chunks; `processed` is true once chunk_count > 0.
+  chunk_count?: number;
+  processed?: boolean;
   file_created_at?: string;
   file_updated_at?: string;
 }
