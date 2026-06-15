@@ -4,13 +4,14 @@ import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import Badge from '../../../core/ui/Badge'
 import Button from '../../../core/ui/Button'
 import { useFilesStore } from '../../files/store/useFilesStore'
+import { rememberProject } from '../recentProjects'
 
 const tools = [
-  { path: 'files', title: 'Files', description: 'Upload source assets, process chunks, and push indexes.' },
-  { path: 'ask', title: 'Ask AI', description: 'Search indexed content and generate grounded answers.' },
-  { path: 'agent', title: 'Agent Chat', description: 'Chat with the project-scoped agent for RAG-powered answers.' },
-  { path: 'translate', title: 'Translation', description: 'Create translation jobs and track output files.' },
-  { path: 'voice', title: 'Voice', description: 'Record audio, transcribe, and ask from speech.' }
+  { path: 'files', title: 'Files', description: 'Upload source assets, process chunks, and push indexes.', requiresFiles: false },
+  { path: 'ask', title: 'Ask AI', description: 'One-shot: search indexed content and get a single grounded answer.', requiresFiles: true },
+  { path: 'agent', title: 'Agent Chat', description: 'Multi-turn: hold a conversation with the project-scoped agent.', requiresFiles: true },
+  { path: 'translate', title: 'Translation', description: 'Create translation jobs and track output files.', requiresFiles: true },
+  { path: 'voice', title: 'Voice', description: 'Ask by speaking and hear the answer back.', requiresFiles: true }
 ]
 
 export default function ProjectDashboardPage() {
@@ -24,9 +25,15 @@ export default function ProjectDashboardPage() {
     toggleFileSelection
   } = useFilesStore()
   const activeProjectId = projectId ?? ''
+  // Query tools need retrievable content — i.e. at least one processed file.
+  const hasIndexedFiles = files.some((file) => file.processed)
 
   useEffect(() => {
-    if (activeProjectId) void loadFiles(activeProjectId)
+    if (activeProjectId) {
+      // Keep the recent-projects list accurate for direct/URL visits too.
+      rememberProject(activeProjectId)
+      void loadFiles(activeProjectId)
+    }
   }, [activeProjectId, loadFiles])
 
   return (
@@ -40,25 +47,67 @@ export default function ProjectDashboardPage() {
         <Badge variant="outline">ID {activeProjectId}</Badge>
       </div>
 
+      {!isLoadingFiles && files.length === 0 && (
+        <div className="flex flex-col gap-3 rounded-md border border-dashed bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium">This project has no files yet</p>
+            <p className="text-sm text-muted-foreground">Upload and index files to unlock Ask, Agent, Translate, and Voice.</p>
+          </div>
+          <Button onClick={() => nav('files')} className="shrink-0">Upload files</Button>
+        </div>
+      )}
+
+      {!isLoadingFiles && files.length > 0 && !hasIndexedFiles && (
+        <div className="flex flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 p-5 text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium">Files are uploaded but not indexed yet</p>
+            <p className="text-sm">Process and push the index so Ask, Agent, Translate, and Voice have content to retrieve.</p>
+          </div>
+          <Button onClick={() => nav('files')} className="shrink-0">Process &amp; index</Button>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {tools.map((tool) => (
-          <Card
-            key={tool.path}
-            role="button"
-            tabIndex={0}
-            className="cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => nav(tool.path)}
-            onKeyDown={(event) => event.key === 'Enter' && nav(tool.path)}
-          >
-            <CardHeader>
-              <CardTitle>{tool.title}</CardTitle>
-              <CardDescription>{tool.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <span className="text-sm font-medium">Open workflow</span>
-            </CardContent>
-          </Card>
-        ))}
+        {tools.map((tool) => {
+          const locked = tool.requiresFiles && !hasIndexedFiles
+          if (locked) {
+            const reason = files.length === 0 ? 'Upload files first' : 'Process & index files first'
+            return (
+              <Card
+                key={tool.path}
+                aria-disabled="true"
+                title={`${reason} to use this tool`}
+                className="opacity-60"
+              >
+                <CardHeader>
+                  <CardTitle>{tool.title}</CardTitle>
+                  <CardDescription>{tool.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <span className="text-sm font-medium text-muted-foreground">{reason}</span>
+                </CardContent>
+              </Card>
+            )
+          }
+          return (
+            <Card
+              key={tool.path}
+              role="button"
+              tabIndex={0}
+              className="cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => nav(tool.path)}
+              onKeyDown={(event) => event.key === 'Enter' && nav(tool.path)}
+            >
+              <CardHeader>
+                <CardTitle>{tool.title}</CardTitle>
+                <CardDescription>{tool.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <span className="text-sm font-medium">Open workflow</span>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
       <Card>
@@ -94,7 +143,14 @@ export default function ProjectDashboardPage() {
                       className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
                     />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{file.file_name}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="block truncate text-sm font-medium">{file.file_name}</span>
+                        {file.processed ? (
+                          <Badge variant="success">Indexed</Badge>
+                        ) : (
+                          <Badge variant="warning">Not indexed</Badge>
+                        )}
+                      </span>
                       <code className="mt-1 block break-all font-mono text-xs text-muted-foreground">{file.file_id}</code>
                     </span>
                   </label>
