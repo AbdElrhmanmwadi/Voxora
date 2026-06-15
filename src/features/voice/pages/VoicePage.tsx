@@ -7,12 +7,13 @@ import AppCard from '../../../core/components/AppCard'
 import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import Badge from '../../../core/ui/Badge'
+import EmptyState from '../../../core/ui/EmptyState'
 import StatusBadge from '../../../core/components/StatusBadge'
 
 export default function VoicePage() {
   const { projectId } = useParams()
   const activeProjectId = projectId ?? ''
-  const { start, stop: stopRecording, recording } = useAudioRecorder()
+  const { start, stop: stopRecording, recording, error: micError } = useAudioRecorder()
   const { transcript, answer, streaming, failed, error, sendAudio, retry, stop: stopStream } = useVoiceStore()
   const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
   const [lastBlobUrl, setLastBlobUrl] = useState<string | null>(null)
@@ -75,17 +76,19 @@ export default function VoicePage() {
                 </p>
               )}
             </div>
-            <div className="rounded-lg border bg-muted/30 p-5">
+            <div className="rounded-md border bg-muted/30 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" aria-live="polite">
                     <span className={recording ? 'h-2.5 w-2.5 rounded-full bg-destructive animate-pulse-soft' : 'h-2.5 w-2.5 rounded-full bg-muted-foreground'} />
                     <p className="text-sm font-medium">{recording ? 'Recording in progress' : streaming ? 'Answering...' : 'Recorder ready'}</p>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">Microphone access is requested by the existing recorder hook.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {hasSelectedFiles ? 'Press Record to ask by voice. Your browser will ask for microphone permission.' : 'Select files first to enable recording.'}
+                  </p>
                 </div>
                 <div className="flex gap-3">
-                  <Button onClick={() => start()} disabled={recording || streaming || !hasSelectedFiles}>Record</Button>
+                  <Button onClick={() => void start()} disabled={recording || streaming || !hasSelectedFiles}>Record</Button>
                   {streaming ? (
                     <Button onClick={stopStream} variant="outline">Stop</Button>
                   ) : (
@@ -95,11 +98,16 @@ export default function VoicePage() {
                   )}
                 </div>
               </div>
+              {micError && (
+                <div role="alert" className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  {micError}
+                </div>
+              )}
             </div>
             {lastBlobUrl && (
               <div className="space-y-2">
                 <Badge variant="secondary">Last recording</Badge>
-                <audio src={lastBlobUrl} controls className="w-full" />
+                <audio src={lastBlobUrl} controls className="w-full" aria-label="Last recorded question" />
               </div>
             )}
           </div>
@@ -121,7 +129,7 @@ export default function VoicePage() {
             {transcript ? (
               <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{transcript}</div>
             ) : (
-              <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No transcript yet.</div>
+              <EmptyState title="No transcript yet" description="Record a question to see what was heard." />
             )}
           </div>
         </AppCard>
@@ -136,7 +144,7 @@ export default function VoicePage() {
         ) : streaming ? (
           <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">Generating answer...</div>
         ) : (
-          <div className="rounded-md border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">No answer generated yet.</div>
+          <EmptyState title="No answer generated yet" description="Record a question to hear a grounded spoken answer." />
         )}
       </AppCard>
     </div>
