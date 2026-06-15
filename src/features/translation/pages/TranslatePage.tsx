@@ -8,6 +8,7 @@ import { ApiClientError } from '../../../core/api/axiosClient'
 import AppCard from '../../../core/components/AppCard'
 import Button from '../../../core/ui/Button'
 import Input from '../../../core/ui/Input'
+import Select from '../../../core/ui/Select'
 import Badge from '../../../core/ui/Badge'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import StatusBadge from '../../../core/components/StatusBadge'
@@ -19,9 +20,6 @@ const LANG_OPTIONS = [
 ] as const
 
 type LangCode = (typeof LANG_OPTIONS)[number]['value']
-
-const selectClassName =
-  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
 
 function resolveFileId(
   projectId: string,
@@ -174,19 +172,14 @@ export default function TranslatePage() {
             <div className="space-y-2">
               <label className="field-label" htmlFor="file-id">Project file</label>
               {files.length > 0 ? (
-                <select
-                  id="file-id"
-                  className={selectClassName}
-                  value={fileId}
-                  onChange={(e) => setFileId(e.target.value)}
-                >
+                <Select id="file-id" value={fileId} onChange={(e) => setFileId(e.target.value)}>
                   <option value="">Select a project file</option>
                   {files.map((file) => (
                     <option key={file.file_id} value={file.file_name ?? file.file_id}>
                       {file.file_name}
                     </option>
                   ))}
-                </select>
+                </Select>
               ) : (
                 <Input
                   id="file-id"
@@ -212,19 +205,19 @@ export default function TranslatePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="source-lang">Source language</label>
-                <select id="source-lang" className={selectClassName} value={source} onChange={(e) => setSource(e.target.value as LangCode)}>
+                <Select id="source-lang" value={source} onChange={(e) => setSource(e.target.value as LangCode)}>
                   {LANG_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="field-label" htmlFor="target-lang">Target language</label>
-                <select id="target-lang" className={selectClassName} value={target} onChange={(e) => setTarget(e.target.value as LangCode)}>
+                <Select id="target-lang" value={target} onChange={(e) => setTarget(e.target.value as LangCode)}>
                   {LANG_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
             {!languagesValid && <p className="text-sm text-destructive">Source and target must be different.</p>}
