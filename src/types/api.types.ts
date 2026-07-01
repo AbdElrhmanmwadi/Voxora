@@ -49,6 +49,20 @@ export interface RagAnswerResponse {
   chat_history?: unknown[];
 }
 
+export interface FeedbackCreateResponse {
+  signal: string;
+  feedback_id: number;
+}
+
+export interface FeedbackAnalyticsResponse {
+  signal: string;
+  total: number;
+  positive: number;
+  negative: number;
+  csat: number | null;
+  top_disliked_questions: { question: string; count: number }[];
+}
+
 export interface TranslationJobCreateResponse {
   signal: string;
   job_id: string;
