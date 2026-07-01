@@ -11,6 +11,7 @@ import Badge from '../../../core/ui/Badge'
 import Skeleton from '../../../core/ui/Skeleton'
 import EmptyState from '../../../core/ui/EmptyState'
 import { toast } from '../../../core/ui/toast'
+import FeedbackButtons from '../../feedback/components/FeedbackButtons'
 import type { SearchResultItem } from '../../../types/api.types'
 
 // `meta_data` shape varies by how a document was processed, so probe a few of
@@ -30,7 +31,7 @@ export default function AskPage() {
   const activeProjectId = projectId ?? ''
   const [text, setText] = useState('')
   const [limit, setLimit] = useState(5)
-  const { results, answer, loading, error, search, ask } = useRagStore()
+  const { results, answer, askedQuestion, loading, error, search, ask } = useRagStore()
   const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
 
   const selectedFiles = useMemo(
@@ -151,6 +152,11 @@ export default function AskPage() {
                   Copy
                 </Button>
               </div>
+              <FeedbackButtons
+                projectId={activeProjectId}
+                question={askedQuestion ?? ''}
+                answer={answer}
+              />
             </div>
           ) : (
             <EmptyState title="No answer generated yet" description="Ask a question to generate a grounded answer." />

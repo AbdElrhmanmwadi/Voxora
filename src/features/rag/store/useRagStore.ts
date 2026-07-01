@@ -7,6 +7,9 @@ import type { SearchResultItem } from '../../../types/api.types'
 interface RagState {
   results: SearchResultItem[]
   answer: string | null
+  // The question that produced `answer`, kept for feedback so editing the
+  // prompt box afterwards does not change what we rate.
+  askedQuestion: string | null
   loading: boolean
   error: string | null
   search: (projectId: string, text: string, limit?: number, fileIds?: string[]) => Promise<void>
@@ -16,6 +19,7 @@ interface RagState {
 export const useRagStore = create<RagState>((set) => ({
   results: [],
   answer: null,
+  askedQuestion: null,
   loading: false,
   error: null,
   search: async (projectId, text, limit = 5, fileIds = []) => {
@@ -36,7 +40,7 @@ export const useRagStore = create<RagState>((set) => ({
     set({ loading: true, error: null })
     try {
       const res = await api.askQuestion(projectId, text, limit, fileIds)
-      set({ answer: res.answer })
+      set({ answer: res.answer, askedQuestion: text })
       toast.success('Answer ready')
     } catch (e) {
       const message = extractError(e as unknown)
