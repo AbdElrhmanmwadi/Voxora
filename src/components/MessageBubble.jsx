@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import FeedbackButtons from '../features/feedback/components/FeedbackButtons'
 
 // Backend sends each source as { text, score, metadata }, where metadata may hold
 // question/section/source/page. Older shapes (file_name/preview/chunk) kept as fallbacks.
@@ -38,7 +39,7 @@ function SourceItem({ src, index }) {
   )
 }
 
-export default function MessageBubble({ message, onRetry }) {
+export default function MessageBubble({ message, onRetry, projectId, sessionId, question }) {
   const isUser = message.role === 'user'
   const [showSources, setShowSources] = useState(false)
   const [showTrace, setShowTrace] = useState(false)
@@ -47,6 +48,8 @@ export default function MessageBubble({ message, onRetry }) {
   const sources = message.sources || (message.metadata && message.metadata.sources) || []
   const trace = message.tool_trace || (message.metadata && message.metadata.tool_trace) || []
   const failed = !isUser && message.failed
+  // Only completed assistant answers (not streaming, not failed) can be rated.
+  const canRate = !isUser && !message.streaming && !failed && Boolean(message.content)
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -102,6 +105,15 @@ export default function MessageBubble({ message, onRetry }) {
               </div>
             ))}
           </div>
+        )}
+
+        {canRate && (
+          <FeedbackButtons
+            projectId={projectId}
+            question={question || ''}
+            answer={message.content}
+            sessionId={sessionId}
+          />
         )}
       </div>
     </div>

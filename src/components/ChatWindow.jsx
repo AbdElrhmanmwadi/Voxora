@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import MessageBubble from './MessageBubble'
 
-export default function ChatWindow({ messages = [], isLoading, error, onRetry }) {
+export default function ChatWindow({ messages = [], isLoading, error, onRetry, projectId, sessionId }) {
   const ref = useRef(null)
   // Follow the bottom while new tokens stream in, but stop as soon as the
   // user scrolls up to read; resume when they scroll back down.
@@ -53,9 +53,21 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry })
       )}
 
       <div className="space-y-3">
-        {messages.map((m, idx) => (
-          <MessageBubble key={idx} message={m} onRetry={idx === messages.length - 1 ? onRetry : undefined} />
-        ))}
+        {messages.map((m, idx) => {
+          // The user turn just before an assistant answer is the question we rate.
+          const prev = messages[idx - 1]
+          const question = prev && prev.role === 'user' ? prev.content : ''
+          return (
+            <MessageBubble
+              key={idx}
+              message={m}
+              onRetry={idx === messages.length - 1 ? onRetry : undefined}
+              projectId={projectId}
+              sessionId={sessionId}
+              question={question}
+            />
+          )
+        })}
         {isLoading && !streamingNow && (
           <div className="text-sm text-muted-foreground">{messages.length === 0 ? 'Loading conversation…' : 'Assistant is typing…'}</div>
         )}

@@ -29,6 +29,8 @@ export default function AgentChat({ projectId }) {
           isLoading={agent.isLoading}
           error={agent.error ? agent.error.message || String(agent.error) : null}
           onRetry={agent.retryLast}
+          projectId={projectId}
+          sessionId={agent.currentSessionId}
         />
         <ChatInput
           onSend={agent.sendMessage}
