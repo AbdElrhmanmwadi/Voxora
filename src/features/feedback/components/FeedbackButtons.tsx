@@ -51,33 +51,49 @@ export default function FeedbackButtons({
     }
   }
 
-  const thumb = (value: FeedbackRating, label: string, glyph: string, onClick: () => void) => (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={done || sending}
-      aria-pressed={rating === value}
-      aria-label={label}
-      title={label}
-      className={cn(
-        'rounded-md px-1.5 py-0.5 text-sm transition-colors hover:bg-muted disabled:cursor-default disabled:opacity-60',
-        rating === value && 'bg-muted text-foreground'
-      )}
-    >
-      {glyph}
-    </button>
-  )
+  const thumb = (value: FeedbackRating, label: string, glyph: string, onClick: () => void) => {
+    const isSelected = rating === value
+    const isLoading = sending && rating === value
+
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={done || sending}
+        aria-pressed={isSelected}
+        aria-label={label}
+        title={label}
+        className={cn(
+          'relative rounded-md px-2 py-1 text-sm transition-all duration-200 hover:bg-muted disabled:cursor-default',
+          isSelected
+            ? 'bg-primary/20 text-primary ring-1 ring-primary/40'
+            : 'text-muted-foreground hover:text-foreground disabled:opacity-50'
+        )}
+      >
+        <span className={isLoading ? 'opacity-0' : 'opacity-100'}>{glyph}</span>
+        {isLoading && (
+          <span className="absolute inset-0 flex items-center justify-center">
+            <span className="animate-pulse">✓</span>
+          </span>
+        )}
+      </button>
+    )
+  }
 
   return (
     <div className={cn('mt-2', className)}>
-      <div className="flex items-center gap-1.5 text-muted-foreground">
+      <div className="flex items-center gap-2">
         {thumb(1, 'Helpful', '👍', () => void send(1, null))}
         {/* 👎: show selected state right away, defer the write until the note step */}
         {thumb(-1, 'Not helpful', '👎', () => {
           setRating(-1)
           setShowComment(true)
         })}
-        {done && <span className="text-xs">Thanks for your feedback</span>}
+        {done && (
+          <span className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-green-200">
+            <span>✓</span> Feedback sent
+          </span>
+        )}
       </div>
 
       {showComment && !done && (
@@ -95,9 +111,10 @@ export default function FeedbackButtons({
               type="button"
               onClick={() => void send(-1, comment.trim() || null)}
               disabled={sending}
-              className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              className="relative rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-all hover:opacity-90 disabled:opacity-60"
             >
-              {sending ? 'Sending…' : 'Send feedback'}
+              <span className={sending ? 'opacity-0' : 'opacity-100'}>Send feedback</span>
+              {sending && <span className="absolute inset-0 flex items-center justify-center">Sending…</span>}
             </button>
             <button
               type="button"
@@ -107,7 +124,7 @@ export default function FeedbackButtons({
                 setRating(null)
               }}
               disabled={sending}
-              className="text-xs text-muted-foreground hover:text-foreground"
+              className="text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
             >
               Cancel
             </button>
