@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
+import VoiceRecordButton from '../features/voice/components/VoiceRecordButton'
 
 // Backend rejects messages over 8000 chars (422), so cap client-side.
 const MAX_LEN = 8000
 
 export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
   const [text, setText] = useState('')
+  const [voiceError, setVoiceError] = useState(null)
   const taRef = useRef(null)
   // Typing stays available while an answer streams; only sending is blocked.
   const canSend = !disabled && !isStreaming
@@ -43,6 +45,14 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
 
   const nearLimit = text.length > MAX_LEN - 1000
 
+  const sendVoiceTranscript = async (transcript) => {
+    const payload = transcript.trim()
+    if (!payload || !canSend) return
+    setText('')
+    setVoiceError(null)
+    await onSend(payload)
+  }
+
   return (
     <div className="border-t bg-card p-3">
       <div className="flex items-end gap-2">
@@ -63,13 +73,21 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
             Stop
           </button>
         ) : (
-          <button
-            onClick={submit}
-            disabled={!canSend || !text.trim()}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
-          >
-            Send
-          </button>
+          <>
+            <VoiceRecordButton
+              disabled={!canSend}
+              onTranscript={sendVoiceTranscript}
+              onError={setVoiceError}
+              className="h-[38px]"
+            />
+            <button
+              onClick={submit}
+              disabled={!canSend || !text.trim()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-50"
+            >
+              Send
+            </button>
+          </>
         )}
       </div>
       <div className="mt-1 flex justify-between text-[11px] text-muted-foreground">
@@ -80,6 +98,11 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
           </span>
         )}
       </div>
+      {voiceError && (
+        <div role="alert" className="mt-2 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
+          {voiceError}
+        </div>
+      )}
     </div>
   )
 }

@@ -12,6 +12,7 @@ import Skeleton from '../../../core/ui/Skeleton'
 import EmptyState from '../../../core/ui/EmptyState'
 import { toast } from '../../../core/ui/toast'
 import FeedbackButtons from '../../feedback/components/FeedbackButtons'
+import VoiceRecordButton from '../../voice/components/VoiceRecordButton'
 import type { SearchResultItem } from '../../../types/api.types'
 
 // `meta_data` shape varies by how a document was processed, so probe a few of
@@ -90,6 +91,14 @@ export default function AskPage() {
               <Input id="limit" type="number" min={1} value={limit} onChange={(e) => setLimit(Number(e.target.value))} />
             </div>
             <div className="flex flex-col gap-3 sm:flex-row">
+              <VoiceRecordButton
+                disabled={loading}
+                onTranscript={(transcript) => {
+                  setText(transcript)
+                  toast.success('Voice question added')
+                }}
+                onError={(message) => toast.error(message)}
+              />
               <Button onClick={() => search(activeProjectId, text, limit, selectedFileIds)} disabled={loading || !canRun}>
                 {loading ? <><LoadingSpinner size={4} /> Searching</> : 'Search'}
               </Button>
