@@ -9,20 +9,18 @@ type Props = {
   className?: string
 }
 
-// Consistent replacement for the hand-rolled `border-dashed bg-muted/30` boxes
-// scattered across pages: one icon + message + optional CTA.
 export default function EmptyState({ title, description, action, icon, className }: Props) {
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-2 rounded-md border border-dashed bg-muted/30 p-6 text-center',
+        'flex flex-col items-center gap-3 rounded-md border border-dashed border-border/80 bg-muted/20 p-8 text-center',
         className
       )}
     >
       {icon && <div className="text-muted-foreground">{icon}</div>}
-      <p className="text-sm font-medium text-foreground">{title}</p>
-      {description && <p className="max-w-sm text-sm text-muted-foreground">{description}</p>}
-      {action && <div className="mt-1">{action}</div>}
+      <p className="text-sm font-semibold text-foreground font-display">{title}</p>
+      {description && <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">{description}</p>}
+      {action && <div className="mt-2">{action}</div>}
     </div>
   )
 }

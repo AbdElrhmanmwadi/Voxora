@@ -61,7 +61,20 @@ export default function VoiceRecordButton({ disabled, className, onTranscript, o
       className={className}
     >
       {transcribing && <LoadingSpinner size={4} />}
-      {recording ? 'Stop voice' : busy ? 'Voice' : 'Voice'}
+      {recording ? (
+        <>
+          <span className="h-2 w-2 rounded-full bg-destructive-foreground animate-pulse-soft" />
+          Stop
+        </>
+      ) : (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          </svg>
+          Voice
+        </>
+      )}
     </Button>
   )
 }

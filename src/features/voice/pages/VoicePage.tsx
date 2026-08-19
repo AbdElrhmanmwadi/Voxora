@@ -34,7 +34,6 @@ export default function VoicePage() {
     }
   }, [lastBlobUrl])
 
-  // Cancel any in-flight stream (and stop playback) when leaving the page.
   useEffect(() => () => stopStream(), [stopStream])
 
   async function handleStop() {
@@ -45,104 +44,133 @@ export default function VoicePage() {
     await sendAudio(activeProjectId, blob)
   }
 
+  const voiceState = recording ? 'recording' : streaming ? 'processing' : transcript ? 'done' : 'idle'
+
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
           <p className="page-kicker">Voice</p>
-          <h1 className="page-title">Speak to project {activeProjectId}</h1>
-          <p className="page-description">Record a voice question and answer it using only selected project files.</p>
+          <h1 className="page-title">Voice AI</h1>
+          <p className="page-description">Record a voice question and get a grounded spoken answer from project files.</p>
         </div>
         <StatusBadge status={recording || streaming ? 'loading' : transcript ? 'success' : 'idle'} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <AppCard title="Recorder">
-          <div className="space-y-5">
-            <div className="space-y-3 rounded-md border bg-muted/30 p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={hasSelectedFiles ? 'success' : 'warning'}>{selectedFileIds.length} selected files</Badge>
-                {isLoadingFiles && <span className="text-sm text-muted-foreground">Loading project files...</span>}
+      <div className="rounded-md border bg-card">
+        <div className="border-b p-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full transition-all ${
+                recording ? 'bg-destructive/10 ring-2 ring-destructive/30' :
+                streaming ? 'bg-primary/10 ring-2 ring-primary/30' :
+                'bg-muted'
+              }`}>
+                {recording ? (
+                  <span className="h-3 w-3 rounded-full bg-destructive animate-pulse-soft" />
+                ) : streaming ? (
+                  <LoadingSpinner size={5} />
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                )}
               </div>
-              {selectedFiles.length > 0 ? (
-                <ul className="space-y-2">
-                  {selectedFiles.map((file) => (
-                    <li key={file.file_id} className="truncate text-sm font-medium">{file.file_name}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Select files before recording. <Link to={`/projects/${activeProjectId}/files`} className="font-medium text-foreground underline-offset-4 hover:underline">Open files</Link>
+              <div>
+                <p className="text-sm font-bold font-display">
+                  {recording ? 'Recording...' : streaming ? 'Processing...' : 'Ready'}
                 </p>
-              )}
-            </div>
-            <div className="rounded-md border bg-muted/30 p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="flex items-center gap-2" aria-live="polite">
-                    <span className={recording ? 'h-2.5 w-2.5 rounded-full bg-destructive animate-pulse-soft' : 'h-2.5 w-2.5 rounded-full bg-muted-foreground'} />
-                    <p className="text-sm font-medium">{recording ? 'Recording in progress' : streaming ? 'Answering...' : 'Recorder ready'}</p>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {hasSelectedFiles ? 'Press Record to ask by voice. Your browser will ask for microphone permission.' : 'Select files first to enable recording.'}
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Button onClick={() => void start()} disabled={recording || streaming || !hasSelectedFiles}>Record</Button>
-                  {streaming ? (
-                    <Button onClick={stopStream} variant="outline">Stop</Button>
-                  ) : (
-                    <Button onClick={handleStop} disabled={!recording} variant="outline">
-                      {!recording ? 'Stop' : <><LoadingSpinner size={4} /> Stop</>}
-                    </Button>
-                  )}
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  {recording ? 'Speak clearly into your microphone' :
+                   streaming ? 'Generating response...' :
+                   hasSelectedFiles ? 'Press Record to ask by voice' : 'Select files first'}
+                </p>
               </div>
-              {micError && (
-                <div role="alert" className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  {micError}
-                </div>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={() => void start()} disabled={recording || streaming || !hasSelectedFiles}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                </svg>
+                Record
+              </Button>
+              {streaming ? (
+                <Button onClick={stopStream} variant="outline">Stop</Button>
+              ) : (
+                <Button onClick={handleStop} disabled={!recording} variant="outline">
+                  {recording ? <><LoadingSpinner size={4} /> Stop</> : 'Stop'}
+                </Button>
               )}
             </div>
+          </div>
+          {micError && (
+            <div role="alert" className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              {micError}
+            </div>
+          )}
+        </div>
+
+        <div className="grid gap-0 divide-y xl:grid-cols-[minmax(0,1fr)_420px] xl:divide-x xl:divide-y-0">
+          <div className="p-6">
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground font-display mb-3">Context</h3>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <Badge variant={hasSelectedFiles ? 'success' : 'warning'}>{selectedFileIds.length} selected files</Badge>
+              {isLoadingFiles && <span className="text-sm text-muted-foreground">Loading...</span>}
+            </div>
+            {selectedFiles.length > 0 ? (
+              <div className="divide-y rounded-md border">
+                {selectedFiles.map((file) => (
+                  <div key={file.file_id} className="truncate px-3 py-2 text-sm font-medium">{file.file_name}</div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Select files before recording. <Link to={`/projects/${activeProjectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">Open files</Link>
+              </p>
+            )}
             {lastBlobUrl && (
-              <div className="space-y-2">
+              <div className="mt-4 space-y-2">
                 <Badge variant="secondary">Last recording</Badge>
                 <audio src={lastBlobUrl} controls className="w-full" aria-label="Last recorded question" />
               </div>
             )}
           </div>
-        </AppCard>
 
-        <AppCard title="Transcript">
-          <div className="space-y-3">
-            {streaming && !transcript && (
-              <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">Processing audio...</div>
-            )}
-            {error && (
-              <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                <span>{error}</span>
-                {failed && (
-                  <Button onClick={() => void retry()} variant="outline" className="shrink-0">Retry</Button>
-                )}
-              </div>
-            )}
-            {transcript ? (
-              <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">{transcript}</div>
-            ) : (
-              <EmptyState title="No transcript yet" description="Record a question to see what was heard." />
-            )}
+          <div className="p-6">
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground font-display mb-3">Transcript</h3>
+            <div className="space-y-3">
+              {streaming && !transcript && (
+                <div className="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground">Processing audio...</div>
+              )}
+              {error && (
+                <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <span>{error}</span>
+                  {failed && (
+                    <Button onClick={() => void retry()} variant="outline" className="shrink-0">Retry</Button>
+                  )}
+                </div>
+              )}
+              {transcript ? (
+                <div className="rounded-md border bg-muted/20 p-4 text-sm leading-relaxed">{transcript}</div>
+              ) : (
+                !streaming && <EmptyState title="No transcript yet" description="Record a question to see what was heard." className="p-4" />
+              )}
+            </div>
           </div>
-        </AppCard>
+        </div>
       </div>
 
       <AppCard title="Answer">
         {answer ? (
-          <div className="rounded-md border bg-muted/30 p-4 text-sm leading-6">
+          <div className="rounded-md border bg-muted/20 p-4 text-sm leading-relaxed">
             {answer}
-            {streaming && <span className="ml-0.5 inline-block h-4 w-2 animate-pulse-soft bg-foreground/60 align-middle" />}
+            {streaming && <span className="ml-0.5 inline-block h-4 w-2 animate-pulse-soft bg-primary/60 align-middle" />}
           </div>
         ) : streaming ? (
-          <div className="rounded-md border bg-muted/30 p-4 text-sm text-muted-foreground">Generating answer...</div>
+          <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">Generating answer...</div>
         ) : (
           <EmptyState title="No answer generated yet" description="Record a question to hear a grounded spoken answer." />
         )}

@@ -67,8 +67,8 @@ export default function FilesPage() {
       <div className="page-header">
         <div>
           <p className="page-kicker">Library</p>
-          <h1 className="page-title">Files for project {activeProjectId}</h1>
-          <p className="page-description">Upload source material, select project files, tune processing options, and push content into the project index.</p>
+          <h1 className="page-title">Files</h1>
+          <p className="page-description">Upload source material, select project files, tune processing, and push content into the index.</p>
         </div>
         <StatusBadge status={selectedFileIds.length > 0 ? 'success' : isLoadingFiles ? 'loading' : 'idle'} />
       </div>
@@ -98,42 +98,40 @@ export default function FilesPage() {
                 </div>
               </div>
 
-              {isLoadingFiles && <div className="rounded-md border bg-muted/30 p-3 text-sm text-muted-foreground">Loading project files...</div>}
+              {isLoadingFiles && <div className="rounded-md bg-muted/30 p-3 text-sm text-muted-foreground">Loading project files...</div>}
               {!isLoadingFiles && files.length === 0 && (
                 <EmptyState title="No files yet" description="Upload a source file below to start building this project's index." />
               )}
-              <ul className="space-y-2">
+              <div className="divide-y rounded-md border">
                 {files.map((file) => {
                   const itemId = String(file.file_id)
                   const checked = selectedFileIds.includes(itemId)
                   return (
-                    <li key={file.file_id} className="rounded-md border bg-background p-3">
-                      <label className="flex cursor-pointer items-start gap-3">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleFileSelection(activeProjectId, itemId)}
-                          className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-2">
-                            <span className="block truncate text-sm font-medium">{file.file_name}</span>
-                            {file.processed ? (
-                              <Badge variant="success">Processed</Badge>
-                            ) : (
-                              <Badge variant="warning">Not processed</Badge>
-                            )}
-                          </span>
-                          <span className="mt-1 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                            <span>{formatFileSize(file.file_size)}</span>
-                            {file.processed && <span>· {file.chunk_count ?? 0} chunks</span>}
-                          </span>
+                    <label key={file.file_id} className="flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-accent/30">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleFileSelection(activeProjectId, itemId)}
+                        className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium">{file.file_name}</span>
+                          {file.processed ? (
+                            <Badge variant="success">Processed</Badge>
+                          ) : (
+                            <Badge variant="warning">Not processed</Badge>
+                          )}
                         </span>
-                      </label>
-                    </li>
+                        <span className="mt-0.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                          <span>{formatFileSize(file.file_size)}</span>
+                          {file.processed && <span>· {file.chunk_count ?? 0} chunks</span>}
+                        </span>
+                      </span>
+                    </label>
                   )
                 })}
-              </ul>
+              </div>
             </div>
           </AppCard>
 
@@ -142,7 +140,7 @@ export default function FilesPage() {
               <div className="space-y-2">
                 <label className="field-label" htmlFor="asset-file">Source file</label>
                 <Input id="asset-file" type="file" accept=".txt,.md,.pdf,.docx,.csv,.html" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} />
-                <p className="field-hint">Supported formats: TXT, MD, PDF, DOCX, CSV, and HTML.</p>
+                <p className="field-hint">Supported: TXT, MD, PDF, DOCX, CSV, HTML.</p>
               </div>
               {selected && (
                 <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
@@ -154,10 +152,10 @@ export default function FilesPage() {
                 {isUploading ? <><LoadingSpinner size={4} /> Uploading</> : 'Upload file'}
               </Button>
               {isUploading && uploadProgress !== null && (
-                <div className="space-y-1" aria-live="polite">
+                <div className="space-y-2" aria-live="polite">
                   <Progress value={uploadProgress} aria-label="Upload progress" />
                   <p className="field-hint">
-                    {uploadProgress < 100 ? `Uploading… ${uploadProgress}%` : 'Upload complete — finalizing on server…'}
+                    {uploadProgress < 100 ? `Uploading... ${uploadProgress}%` : 'Upload complete — finalizing on server...'}
                   </p>
                 </div>
               )}
@@ -166,14 +164,14 @@ export default function FilesPage() {
 
           <AppCard title="Process and index">
             <div className="space-y-4">
-              <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-2 rounded-md border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
                 <span className="text-sm text-muted-foreground">File to process</span>
                 <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{processingFileId ?? 'Select a project file'}</code>
               </div>
               {processingFileId && (
                 <Link
                   to={`/projects/${activeProjectId}/translate?fileId=${encodeURIComponent(processingFileId)}`}
-                  className="inline-block text-sm font-medium text-foreground underline-offset-4 hover:underline"
+                  className="inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
                 >
                   Translate this file
                 </Link>
@@ -184,7 +182,7 @@ export default function FilesPage() {
               </Button>
 
               {showAdvanced && (
-                <div className="grid gap-4 rounded-md border bg-muted/20 p-4 sm:grid-cols-2">
+                <div className="grid gap-4 rounded-md border bg-muted/10 p-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <label className="field-label" htmlFor="chunk-size">Chunk size</label>
                     <Input id="chunk-size" type="number" min={1} value={chunkSize} onChange={(e) => setChunkSize(Number(e.target.value))} />

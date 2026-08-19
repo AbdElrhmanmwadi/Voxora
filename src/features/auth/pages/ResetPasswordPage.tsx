@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
 import PasswordInput from '../../../core/ui/PasswordInput'
 import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
-import Logo from '../../../core/ui/Logo'
+import AuthLayout from '../../../core/layout/AuthLayout'
 import { resetPasswordRequest } from '../api/authApi'
 import { clearTokens } from '../../../core/auth/authStorage'
 import { ApiClientError } from '../../../core/api/axiosClient'
@@ -52,7 +51,6 @@ export default function ResetPasswordPage() {
     setLoading(true)
     try {
       await resetPasswordRequest(token, password)
-      // The server revokes every refresh token for this user; drop local ones too.
       clearTokens()
       setSuccess(true)
     } catch (err) {
@@ -63,77 +61,71 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2">
-            <Logo />
+    <AuthLayout>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight font-display">New password</h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">Choose a new password for your account.</p>
+      </div>
+
+      {!token ? (
+        <div className="mt-8 space-y-4">
+          <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            Reset token is missing. Open the link from your email, or request a new one.
           </div>
-          <CardTitle>Reset your password</CardTitle>
-          <CardDescription>Choose a new password for your account.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {!token ? (
-            <div className="space-y-4">
-              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                Reset token is missing. Open the link from your email, or request a new one.
-              </div>
-              <p className="text-center text-sm text-muted-foreground">
-                <Link to="/auth/forgot-password" className="font-medium text-foreground underline-offset-4 hover:underline">Request a new reset link</Link>
-              </p>
-            </div>
-          ) : success ? (
-            <div className="space-y-4">
-              <div className="rounded-md border bg-muted/40 p-4 text-sm leading-6">
-                Password changed — sign in with your new password.
-              </div>
-              <Button className="w-full" onClick={() => window.location.assign('/login')}>Go to login</Button>
-            </div>
-          ) : (
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <label className="field-label" htmlFor="new-password">New password</label>
-                <PasswordInput
-                  id="new-password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={PASSWORD_MIN}
-                  maxLength={PASSWORD_MAX}
-                  required
-                />
-                <p className="field-hint">{PASSWORD_MIN}-{PASSWORD_MAX} characters.</p>
-              </div>
-              <div className="space-y-2">
-                <label className="field-label" htmlFor="confirm-password">Confirm new password</label>
-                <PasswordInput
-                  id="confirm-password"
-                  autoComplete="new-password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  minLength={PASSWORD_MIN}
-                  maxLength={PASSWORD_MAX}
-                  required
-                />
-              </div>
-              {error && (
-                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}{' '}
-                  {error.includes('Request a new one') && (
-                    <Link to="/auth/forgot-password" className="font-medium underline underline-offset-4">Request new link</Link>
-                  )}
-                </div>
-              )}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <><LoadingSpinner size={4} /> Resetting</> : 'Reset password'}
-              </Button>
-            </form>
-          )}
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">Back to login</Link>
+          <p className="text-center text-sm text-muted-foreground">
+            <Link to="/auth/forgot-password" className="font-semibold text-foreground underline-offset-4 hover:underline">Request a new reset link</Link>
           </p>
-        </CardContent>
-      </Card>
-    </main>
+        </div>
+      ) : success ? (
+        <div className="mt-8 space-y-4">
+          <div className="rounded-md border bg-muted/40 p-4 text-sm leading-relaxed">
+            Password changed — sign in with your new password.
+          </div>
+          <Button className="w-full" onClick={() => window.location.assign('/login')}>Go to login</Button>
+        </div>
+      ) : (
+        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="field-label" htmlFor="new-password">New password</label>
+            <PasswordInput
+              id="new-password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={PASSWORD_MIN}
+              maxLength={PASSWORD_MAX}
+              required
+            />
+            <p className="field-hint">{PASSWORD_MIN}-{PASSWORD_MAX} characters.</p>
+          </div>
+          <div className="space-y-2">
+            <label className="field-label" htmlFor="confirm-password">Confirm new password</label>
+            <PasswordInput
+              id="confirm-password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              minLength={PASSWORD_MIN}
+              maxLength={PASSWORD_MAX}
+              required
+            />
+          </div>
+          {error && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              {error}{' '}
+              {error.includes('Request a new one') && (
+                <Link to="/auth/forgot-password" className="font-semibold underline underline-offset-4">Request new link</Link>
+              )}
+            </div>
+          )}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <><LoadingSpinner size={4} /> Resetting</> : 'Reset password'}
+          </Button>
+        </form>
+      )}
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        <Link to="/login" className="font-semibold text-foreground underline-offset-4 hover:underline">Back to login</Link>
+      </p>
+    </AuthLayout>
   )
 }

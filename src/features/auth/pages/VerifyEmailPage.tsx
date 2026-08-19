@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
 import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
-import { verifyEmailRequest } from '../api/authApi'
 import StatusBadge from '../../../core/components/StatusBadge'
+import AuthLayout from '../../../core/layout/AuthLayout'
+import { verifyEmailRequest } from '../api/authApi'
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams()
@@ -42,25 +42,23 @@ export default function VerifyEmailPage() {
   }, [token])
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2">
-            <StatusBadge status={status} />
-          </div>
-          <CardTitle>Email verification</CardTitle>
-          <CardDescription>{message}</CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          {status === 'loading' && <LoadingSpinner />}
-          {status === 'success' && (
-            <Button onClick={() => window.location.assign('/login')} className="w-full">Go to login</Button>
-          )}
-          {status === 'error' && (
-            <Link to="/login" className="text-sm font-medium underline-offset-4 hover:underline">Back to login</Link>
-          )}
-        </CardContent>
-      </Card>
-    </main>
+    <AuthLayout>
+      <div className="text-center">
+        <div className="mb-4 flex justify-center">
+          <StatusBadge status={status} />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight font-display">Email verification</h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">{message}</p>
+      </div>
+      <div className="mt-8 text-center">
+        {status === 'loading' && <LoadingSpinner />}
+        {status === 'success' && (
+          <Button onClick={() => window.location.assign('/login')} className="w-full">Go to login</Button>
+        )}
+        {status === 'error' && (
+          <Link to="/login" className="text-sm font-semibold underline-offset-4 hover:underline">Back to login</Link>
+        )}
+      </div>
+    </AuthLayout>
   )
 }

@@ -13,7 +13,7 @@ export default function AgentChat({ projectId }) {
   }, [loadSessions])
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+    <div className="flex h-[calc(100vh-9rem)] overflow-hidden rounded-md border bg-card">
       <SessionSidebar
         sessions={agent.sessions}
         currentSessionId={agent.currentSessionId}
@@ -23,7 +23,7 @@ export default function AgentChat({ projectId }) {
         onRefresh={agent.loadSessions}
       />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         <ChatWindow
           messages={agent.messages}
           isLoading={agent.isLoading}

@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
 import Input from '../../../core/ui/Input'
 import PasswordInput from '../../../core/ui/PasswordInput'
 import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
-import Logo from '../../../core/ui/Logo'
+import AuthLayout from '../../../core/layout/AuthLayout'
 import { useAuth } from '../../../core/auth/AuthContext'
 
 export default function RegisterPage() {
@@ -33,48 +32,42 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2">
-            <Logo />
+    <AuthLayout>
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight font-display">Create account</h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">Get started with Voxora.</p>
+      </div>
+
+      {success ? (
+        <div className="mt-8 space-y-4">
+          <div className="rounded-md border bg-muted/40 p-4 text-sm leading-relaxed">
+            Check your email to verify your account, then return to log in.
           </div>
-          <CardTitle>Create your account</CardTitle>
-          <CardDescription>Register with the backend auth service and verify your email before logging in.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {success ? (
-            <div className="space-y-4">
-              <div className="rounded-md border bg-muted/40 p-4 text-sm leading-6">
-                Check your email to verify your account, then return to log in.
-              </div>
-              <Button className="w-full" onClick={() => window.location.assign('/login')}>Go to login</Button>
-            </div>
-          ) : (
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div className="space-y-2">
-                <label className="field-label" htmlFor="email">Email</label>
-                <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <label className="field-label" htmlFor="username">Username</label>
-                <Input id="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <label className="field-label" htmlFor="password">Password</label>
-                <PasswordInput id="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
-              {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <><LoadingSpinner size={4} /> Creating account</> : 'Create account'}
-              </Button>
-            </form>
-          )}
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already registered? <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">Log in</Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+          <Button className="w-full" onClick={() => window.location.assign('/login')}>Go to login</Button>
+        </div>
+      ) : (
+        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <label className="field-label" htmlFor="email">Email</label>
+            <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <label className="field-label" htmlFor="username">Username</label>
+            <Input id="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <label className="field-label" htmlFor="password">Password</label>
+            <PasswordInput id="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+          {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <><LoadingSpinner size={4} /> Creating account</> : 'Create account'}
+          </Button>
+        </form>
+      )}
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        Already registered? <Link to="/login" className="font-semibold text-foreground underline-offset-4 hover:underline">Sign in</Link>
+      </p>
+    </AuthLayout>
   )
 }

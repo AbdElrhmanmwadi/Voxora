@@ -23,13 +23,13 @@ export default function Toaster() {
           key={t.id}
           role="status"
           className={cn(
-            'pointer-events-auto w-full max-w-sm animate-fade-in rounded-md border p-3 shadow-md',
+            'pointer-events-auto w-full max-w-sm animate-slide-in rounded-md border p-3 shadow-md',
             variantStyles[t.variant]
           )}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-semibold">{t.title}</p>
+              <p className="text-sm font-bold font-display">{t.title}</p>
               {t.description && (
                 <p className="mt-0.5 break-words text-xs leading-5 opacity-90">{t.description}</p>
               )}

@@ -158,9 +158,9 @@ export default function TranslatePage() {
       <div className="page-header">
         <div>
           <p className="page-kicker">Translation</p>
-          <h1 className="page-title">Translate project content</h1>
+          <h1 className="page-title">Translate</h1>
           <p className="page-description">
-            Create translation jobs from selected project files. Large documents may take a few minutes on the server.
+            Create translation jobs from selected project files. Large documents may take a few minutes.
           </p>
         </div>
         <StatusBadge status={headerBadgeStatus} />
@@ -189,13 +189,13 @@ export default function TranslatePage() {
                 />
               )}
               {selectedFile ? (
-                <p className="field-hint">Selected file: {selectedFile.file_name} ({selectedFile.file_id})</p>
+                <p className="field-hint">Selected: {selectedFile.file_name} ({selectedFile.file_id})</p>
               ) : suggestedFileId ? (
                 <p className="field-hint">Using the selected file for this project.</p>
               ) : (
                 <p className="field-hint">
                   Select or upload a file on the{' '}
-                  <Link to={`/projects/${projectId}/files`} className="font-medium text-foreground underline-offset-4 hover:underline">
+                  <Link to={`/projects/${projectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">
                     Files page
                   </Link>{' '}
                   first.
@@ -239,22 +239,22 @@ export default function TranslatePage() {
           <div className="space-y-4">
             {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
             {isInProgress(status) && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100">
-                <p className="flex items-center gap-2 font-medium">
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                <p className="flex items-center gap-2 font-semibold">
                   <LoadingSpinner size={4} />
-                  Translating on server... {elapsedSeconds > 0 && <span className="font-normal">({elapsedLabel})</span>}
+                  Translating on server... {elapsedSeconds > 0 && <span className="font-normal opacity-80">({elapsedLabel})</span>}
                 </p>
-                <p className="mt-1 text-xs opacity-90">
-                  Status updates every 2 seconds. You can keep this tab open; no need to click Check status.
+                <p className="mt-1 text-xs opacity-80">
+                  Auto-checking every 2 seconds.
                 </p>
               </div>
             )}
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/20 px-3 py-2">
                 <span className="text-muted-foreground">Job ID</span>
                 <code className="break-all text-right font-mono text-xs">{jobId ?? 'Not created'}</code>
               </div>
-              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/30 px-3 py-2">
+              <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/20 px-3 py-2">
                 <span className="text-muted-foreground">Status</span>
                 <Badge variant={jobStatusVariant} className={cn(isInProgress(status) && 'capitalize')}>
                   {status ?? 'Waiting'}
@@ -265,7 +265,7 @@ export default function TranslatePage() {
                   {jobErrorMessage}
                 </div>
               )}
-              <div className="space-y-2 rounded-md border bg-muted/30 px-3 py-2">
+              <div className="space-y-2 rounded-md border bg-muted/20 px-3 py-2">
                 <span className="text-muted-foreground">Result file</span>
                 <code className="block break-all font-mono text-xs">{resultFileId ?? 'Not available'}</code>
                 {jobId && isTerminalSuccess(status) && (

@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '../../../core/ui/Card'
 import Input from '../../../core/ui/Input'
 import Button from '../../../core/ui/Button'
-import Badge from '../../../core/ui/Badge'
 import FormField from '../../../core/ui/FormField'
 import EmptyState from '../../../core/ui/EmptyState'
 import {
@@ -57,88 +55,80 @@ export default function ProjectsPage() {
       <div className="page-header">
         <div>
           <p className="page-kicker">Workspace</p>
-          <h1 className="page-title">Your projects</h1>
-          <p className="page-description">Open a project to manage its files, retrieval, translation, and voice workflows.</p>
+          <h1 className="page-title">Projects</h1>
+          <p className="page-description">Open a project to manage files, retrieval, translation, and voice workflows.</p>
         </div>
-        <Badge variant="secondary">Local session</Badge>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Open a project</CardTitle>
-          <CardDescription>Enter a project ID to open it. Add a name to recognize it later — names are saved in this browser.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)_auto] sm:items-start">
-            <FormField label="Project ID" error={error}>
-              {(field) => (
-                <Input
-                  {...field}
-                  inputMode="numeric"
-                  value={projectId}
-                  onChange={(e) => setProjectId(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && submit()}
-                  placeholder="e.g. 1024"
-                />
-              )}
-            </FormField>
-            <FormField label="Name (optional)">
-              {(field) => (
-                <Input
-                  {...field}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && submit()}
-                  placeholder="e.g. Q3 Research"
-                />
-              )}
-            </FormField>
-            <Button onClick={submit} className="w-full sm:mt-7 sm:w-auto">Open project</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="rounded-md border bg-card p-6">
+        <h2 className="text-sm font-bold font-display tracking-tight">Open a project</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Enter a project ID to open it. Names are saved locally.</p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)_auto] sm:items-start">
+          <FormField label="Project ID" error={error}>
+            {(field) => (
+              <Input
+                {...field}
+                inputMode="numeric"
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+                placeholder="e.g. 1024"
+              />
+            )}
+          </FormField>
+          <FormField label="Name (optional)">
+            {(field) => (
+              <Input
+                {...field}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+                placeholder="e.g. Q3 Research"
+              />
+            )}
+          </FormField>
+          <Button onClick={submit} className="w-full sm:mt-7 sm:w-auto">Open project</Button>
+        </div>
+      </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recent projects</h2>
-          {projects.length > 0 && <span className="text-xs text-muted-foreground">{projects.length} saved in this browser</span>}
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground font-display">Recent projects</h2>
+          {projects.length > 0 && <span className="text-xs text-muted-foreground">{projects.length} saved</span>}
         </div>
 
         {projects.length === 0 ? (
           <EmptyState
             title="No projects yet"
-            description="Open one by ID above to get started — it will appear here for quick access."
-            className="p-8"
+            description="Open one by ID above to get started."
+            className="p-10"
           />
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="divide-y rounded-md border bg-card">
             {projects.map((p) => (
-              <li key={p.id}>
-                <Card
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => open(p.id)}
-                  onKeyDown={(e) => e.key === 'Enter' && open(p.id)}
-                  className="group cursor-pointer transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              <div
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => open(p.id)}
+                onKeyDown={(e) => e.key === 'Enter' && open(p.id)}
+                className="group flex cursor-pointer items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{p.name}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">ID {p.id} · opened {relativeTime(p.lastOpenedAt)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => remove(e, p.id)}
+                  aria-label={`Remove ${p.name} from recent projects`}
+                  className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
                 >
-                  <CardContent className="flex items-start justify-between gap-3 p-5">
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-semibold">{p.name}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">ID {p.id} · opened {relativeTime(p.lastOpenedAt)}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => remove(e, p.id)}
-                      aria-label={`Remove ${p.name} from recent projects`}
-                      className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
-                    >
-                      &times;
-                    </button>
-                  </CardContent>
-                </Card>
-              </li>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </div>

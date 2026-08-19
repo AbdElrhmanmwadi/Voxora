@@ -1,53 +1,51 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
 	:root {
-		--background: 210 40% 98%;
-		--foreground: 222 47% 11%;
-		--card: 0 0% 100%;
-		--card-foreground: 222 47% 11%;
-		--popover: 0 0% 100%;
-		--popover-foreground: 222 47% 11%;
-		--border: 214 32% 91%;
-		--input: 214 32% 91%;
-		--primary: 222 47% 11%;
-		--primary-foreground: 210 40% 98%;
-		--secondary: 210 40% 96%;
-		--secondary-foreground: 222 47% 11%;
-		--muted: 210 40% 96%;
-		--muted-foreground: 215 16% 47%;
-		--accent: 210 40% 96%;
-		--accent-foreground: 222 47% 11%;
-		--destructive: 0 84% 60%;
-		--destructive-foreground: 210 40% 98%;
-		--ring: 222 47% 11%;
-		--radius: 0.5rem;
+		--background: 40 20% 98%;
+		--foreground: 20 14% 10%;
+		--card: 40 16% 99%;
+		--card-foreground: 20 14% 10%;
+		--popover: 40 16% 99%;
+		--popover-foreground: 20 14% 10%;
+		--border: 30 10% 90%;
+		--input: 30 10% 90%;
+		--primary: 16 80% 44%;
+		--primary-foreground: 40 20% 98%;
+		--secondary: 30 12% 95%;
+		--secondary-foreground: 20 14% 10%;
+		--muted: 30 10% 95%;
+		--muted-foreground: 20 8% 46%;
+		--accent: 30 12% 95%;
+		--accent-foreground: 20 14% 10%;
+		--destructive: 0 72% 51%;
+		--destructive-foreground: 40 20% 98%;
+		--ring: 16 80% 44%;
+		--radius: 0.375rem;
 	}
 
 	.dark {
-		--background: 222 47% 7%;
-		--foreground: 210 40% 98%;
-		--card: 222 47% 10%;
-		--card-foreground: 210 40% 98%;
-		--popover: 222 47% 10%;
-		--popover-foreground: 210 40% 98%;
-		--border: 217 32% 17%;
-		--input: 217 32% 17%;
-		--primary: 210 40% 98%;
-		--primary-foreground: 222 47% 11%;
-		--secondary: 217 32% 17%;
-		--secondary-foreground: 210 40% 98%;
-		--muted: 217 32% 17%;
-		--muted-foreground: 215 20% 65%;
-		--accent: 217 32% 17%;
-		--accent-foreground: 210 40% 98%;
-		--destructive: 0 72% 51%;
-		--destructive-foreground: 210 40% 98%;
-		--ring: 212 96% 78%;
+		--background: 20 14% 6%;
+		--foreground: 40 20% 96%;
+		--card: 20 14% 8%;
+		--card-foreground: 40 20% 96%;
+		--popover: 20 14% 8%;
+		--popover-foreground: 40 20% 96%;
+		--border: 20 10% 16%;
+		--input: 20 10% 16%;
+		--primary: 16 80% 50%;
+		--primary-foreground: 20 14% 6%;
+		--secondary: 20 10% 14%;
+		--secondary-foreground: 40 20% 96%;
+		--muted: 20 10% 14%;
+		--muted-foreground: 20 8% 56%;
+		--accent: 20 10% 14%;
+		--accent-foreground: 40 20% 96%;
+		--destructive: 0 62% 50%;
+		--destructive-foreground: 40 20% 96%;
+		--ring: 16 80% 50%;
 	}
 
 	*, *::before, *::after { @apply border-border; box-sizing: border-box; }
@@ -55,21 +53,60 @@
 	html, body, #root { height: 100%; }
 
 	body {
-		@apply bg-background text-foreground font-sans antialiased;
-		background:
-			linear-gradient(180deg, hsl(var(--background)) 0%, hsl(210 40% 96%) 100%);
+		@apply bg-background text-foreground antialiased;
+		font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+		font-feature-settings: "cv02", "cv03", "cv04", "cv05";
+		letter-spacing: -0.011em;
 	}
 
 	button, input, textarea, select { font: inherit; }
+
+	::selection {
+		background: hsl(var(--primary) / 0.15);
+	}
 }
 
 @layer components {
-	.page-container { @apply mx-auto w-full max-w-6xl animate-fade-in space-y-6; }
+	.page-container { @apply mx-auto w-full max-w-6xl animate-fade-in space-y-8; }
 	.page-header { @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between; }
-	.page-kicker { @apply text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground; }
-	.page-title { @apply text-2xl font-semibold tracking-tight text-foreground sm:text-3xl; }
+	.page-kicker {
+		@apply text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+	}
+	.page-title {
+		@apply text-3xl font-bold tracking-tight text-foreground sm:text-4xl;
+		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		letter-spacing: -0.03em;
+	}
 	.page-description { @apply max-w-2xl text-sm leading-6 text-muted-foreground; }
-	.field-label { @apply text-sm font-medium text-foreground; }
+	.field-label {
+		@apply text-sm font-semibold text-foreground;
+		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		letter-spacing: -0.01em;
+	}
 	.field-hint { @apply text-xs leading-5 text-muted-foreground; }
 	.log-panel { @apply max-h-64 space-y-2 overflow-y-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-5 text-muted-foreground; }
+
+	.section-divider {
+		@apply border-t border-border;
+	}
+
+	.surface {
+		@apply rounded-md border bg-card;
+	}
+
+	.surface-raised {
+		@apply rounded-md border bg-card shadow-sm;
+	}
+}
+
+@layer utilities {
+	.font-display {
+		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		letter-spacing: -0.03em;
+	}
+
+	.text-balance {
+		text-wrap: balance;
+	}
 }

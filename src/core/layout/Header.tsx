@@ -26,24 +26,24 @@ export default function Header() {
   const sectionLabel = sectionKey ? SECTION_LABELS[sectionKey] : undefined
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto w-full max-w-[1536px] px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-14 items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <Link to="/" className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Link to="/" className="flex min-w-0 items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <Logo />
-              <span className="block shrink-0 text-sm font-semibold tracking-tight sm:text-base">Voxora AI</span>
+              <span className="block shrink-0 text-sm font-bold tracking-tight font-display sm:text-base">Voxora</span>
             </Link>
             {projectLabel && (
               <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-sm text-muted-foreground sm:flex">
-                <span aria-hidden="true">/</span>
-                <Link to={`/projects/${projectId}`} className="truncate rounded text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <span aria-hidden="true" className="text-border">/</span>
+                <Link to={`/projects/${projectId}`} className="truncate rounded text-foreground/80 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   {projectLabel}
                 </Link>
                 {sectionLabel && (
                   <>
-                    <span aria-hidden="true">/</span>
-                    <span className="truncate text-foreground" aria-current="page">{sectionLabel}</span>
+                    <span aria-hidden="true" className="text-border">/</span>
+                    <span className="truncate font-medium text-foreground" aria-current="page">{sectionLabel}</span>
                   </>
                 )}
               </nav>
@@ -51,10 +51,9 @@ export default function Header() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <Badge variant="secondary" className="hidden sm:inline-flex">Beta</Badge>
-            <Button size="sm" variant="outline">Upgrade</Button>
+            <Badge variant="default" className="hidden sm:inline-flex">Beta</Badge>
             <Button size="sm" variant="ghost" onClick={logout}>Logout</Button>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border bg-card text-xs font-semibold shadow-sm" aria-label={displayName ? `Current user: ${displayName}` : 'Current user'} title={displayName || undefined}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary font-display" aria-label={displayName ? `Current user: ${displayName}` : 'Current user'} title={displayName || undefined}>
               {avatarInitials}
             </div>
           </div>
