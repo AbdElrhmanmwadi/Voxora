@@ -1,0 +1,535 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "select": "Select",
+    "upload": "Upload",
+    "download": "Download",
+    "copy": "Copy",
+    "copied": "Copied",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "open": "Open",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "and": "and",
+    "of": "of",
+    "to": "to",
+    "from": "from",
+    "with": "with",
+    "without": "without",
+    "in": "in",
+    "out": "out",
+    "on": "on",
+    "off": "off",
+    "all": "All",
+    "none": "None",
+    "selected": "selected",
+    "required": "required",
+    "optional": "optional",
+    "beta": "Beta",
+    "idle": "idle",
+    "processing": "Processing...",
+    "ready": "Ready",
+    "events": "events"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "description": "Access your Voxora workspace.",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign in",
+      "submitting": "Signing in",
+      "orContinueWith": "Or continue with",
+      "noAccount": "New to Voxora?",
+      "register": "Create an account",
+      "googleSigningIn": "Signing in with Google"
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Get started with Voxora.",
+      "email": "Email",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Create account",
+      "submitting": "Creating account",
+      "hasAccount": "Already registered?",
+      "login": "Sign in",
+      "success": "Check your email to verify your account, then return to log in.",
+      "goToLogin": "Go to login"
+    },
+    "forgotPassword": {
+      "title": "Reset password",
+      "description": "Enter your email to receive a reset link.",
+      "email": "Email",
+      "submit": "Send reset link",
+      "submitting": "Sending",
+      "resend": "Resend reset link",
+      "cooldown": "Resend available in {seconds}s",
+      "success": "If an account with that email exists, a password reset link has been sent. Check your inbox (and spam folder).",
+      "backToLogin": "Remembered it?",
+      "backToLoginLink": "Back to login"
+    },
+    "resetPassword": {
+      "title": "New password",
+      "description": "Choose a new password for your account.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "hint": "{min}-{max} characters.",
+      "submit": "Reset password",
+      "submitting": "Resetting",
+      "success": "Password changed — sign in with your new password.",
+      "goToLogin": "Go to login",
+      "backToLogin": "Back to login",
+      "missingToken": "Reset token is missing. Open the link from your email, or request a new one.",
+      "requestNewLink": "Request a new reset link"
+    },
+    "verifyEmail": {
+      "title": "Email verification",
+      "verifying": "Verifying your email address...",
+      "goToLogin": "Go to login",
+      "backToLogin": "Back to login"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password.",
+      "googleAccount": "This account uses Google sign-in. Use the Google button below.",
+      "notVerified": "Email is not verified. Please check your inbox.",
+      "googleInvalid": "Invalid or expired Google sign-in. Please try again.",
+      "googleNotVerified": "Your Google email is not verified.",
+      "googleAccountMismatch": "This email is linked to a different Google account. Sign in with your password or use the correct Google account.",
+      "googleNotConfigured": "Google sign-in is not configured on the server.",
+      "googleFailed": "Google sign-in failed.",
+      "googleNoCredential": "Google sign-in did not return a credential.",
+      "googleCancelled": "Google sign-in was cancelled or failed.",
+      "genericLogin": "Unable to log in.",
+      "genericRegister": "Unable to register.",
+      "genericReset": "Unable to reset the password.",
+      "genericForgot": "Unable to send the reset email. Try again.",
+      "expiredLink": "This link has expired. Request a new one below.",
+      "invalidLink": "This link is invalid or was already used. Request a new one below.",
+      "passwordLength": "Password must be {min}-{max} characters.",
+      "passwordMismatch": "Passwords do not match.",
+      "requestNewLink": "Request new link"
+    }
+  },
+  "layout": {
+    "header": {
+      "logout": "Logout",
+      "upgrade": "Upgrade",
+      "currentUser": "Current user: {name}"
+    },
+    "sidebar": {
+      "workspace": "Workspace",
+      "library": "Library",
+      "projects": "Projects",
+      "overview": "Overview",
+      "askAI": "Ask AI",
+      "agentChat": "Agent Chat",
+      "translate": "Translate",
+      "voice": "Voice",
+      "files": "Files",
+      "openProjectHint": "Open a project to access its tools."
+    },
+    "breadcrumb": {
+      "ariaLabel": "Breadcrumb"
+    }
+  },
+  "projects": {
+    "page": {
+      "kicker": "Workspace",
+      "title": "Projects",
+      "description": "Open a project to manage files, retrieval, translation, and voice workflows."
+    },
+    "open": {
+      "title": "Open a project",
+      "description": "Enter a project ID to open it. Names are saved locally.",
+      "projectId": "Project ID",
+      "projectIdPlaceholder": "e.g. 1024",
+      "name": "Name (optional)",
+      "namePlaceholder": "e.g. Q3 Research",
+      "submit": "Open project",
+      "errorNumeric": "Project ID must be numeric"
+    },
+    "recent": {
+      "title": "Recent projects",
+      "saved": "{count} saved",
+      "empty": "No projects yet",
+      "emptyDescription": "Open one by ID above to get started.",
+      "id": "ID {id}",
+      "opened": "opened {time}",
+      "remove": "Remove {name} from recent projects"
+    },
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{count} min ago",
+      "hoursAgo": "{count} h ago",
+      "daysAgo": "{count} d ago"
+    }
+  },
+  "dashboard": {
+    "page": {
+      "kicker": "Project overview",
+      "title": "Project {id}",
+      "description": "Select files, then run Ask, Voice, or Translate against scoped context."
+    },
+    "noFiles": {
+      "title": "No files yet",
+      "description": "Upload and index files to unlock Ask, Agent, Translate, and Voice.",
+      "action": "Upload files"
+    },
+    "notIndexed": {
+      "title": "Files uploaded but not indexed",
+      "description": "Process and push the index so tools have content to retrieve.",
+      "action": "Process & index"
+    },
+    "tools": {
+      "files": {
+        "title": "Files",
+        "description": "Upload source assets, process chunks, and push indexes."
+      },
+      "ask": {
+        "title": "Ask AI",
+        "description": "Search indexed content and get a single grounded answer."
+      },
+      "agent": {
+        "title": "Agent Chat",
+        "description": "Multi-turn conversation with the project-scoped agent."
+      },
+      "translate": {
+        "title": "Translation",
+        "description": "Create translation jobs and track output files."
+      },
+      "voice": {
+        "title": "Voice",
+        "description": "Ask by speaking and hear the answer back."
+      },
+      "uploadFirst": "Upload files first",
+      "processFirst": "Process & index files first",
+      "openWorkflow": "Open workflow"
+    },
+    "filesSection": {
+      "title": "Project files",
+      "description": "Services use selected file IDs as their context boundary.",
+      "files": "{count} files",
+      "selected": "{count} selected",
+      "loading": "Loading project files...",
+      "empty": "No files found for this project.",
+      "indexed": "Indexed",
+      "notIndexed": "Not indexed",
+      "manage": "Manage files"
+    }
+  },
+  "files": {
+    "page": {
+      "kicker": "Library",
+      "title": "Files",
+      "description": "Upload source material, select project files, tune processing, and push content into the index."
+    },
+    "list": {
+      "title": "Project files",
+      "files": "{count} files",
+      "selected": "{count} selected",
+      "selectAll": "Select all",
+      "clear": "Clear",
+      "loading": "Loading project files...",
+      "empty": "No files yet",
+      "emptyDescription": "Upload a source file below to start building this project's index.",
+      "processed": "Processed",
+      "notProcessed": "Not processed",
+      "chunks": "{count} chunks"
+    },
+    "upload": {
+      "title": "Upload file",
+      "label": "Source file",
+      "hint": "Supported: TXT, MD, PDF, DOCX, CSV, HTML.",
+      "selected": "Selected: {name}",
+      "submit": "Upload file",
+      "uploading": "Uploading",
+      "uploadingProgress": "Uploading... {percent}%",
+      "uploadComplete": "Upload complete — finalizing on server..."
+    },
+    "process": {
+      "title": "Process and index",
+      "fileToProcess": "File to process",
+      "selectFile": "Select a project file",
+      "translateFile": "Translate this file",
+      "showAdvanced": "Show advanced options",
+      "hideAdvanced": "Hide advanced options",
+      "chunkSize": "Chunk size",
+      "overlap": "Overlap",
+      "resetIndex": "Reset index before running",
+      "processFile": "Process file",
+      "processing": "Processing",
+      "pushIndex": "Push index",
+      "indexing": "Indexing",
+      "hint": "Processing uses the first selected file. Ask and Voice can use all selected files as context."
+    },
+    "activityLog": {
+      "title": "Activity log",
+      "events": "{count} events",
+      "empty": "No activity yet."
+    },
+    "size": {
+      "B": "B",
+      "KB": "KB",
+      "MB": "MB",
+      "GB": "GB"
+    }
+  },
+  "ask": {
+    "page": {
+      "kicker": "Retrieval",
+      "title": "Ask AI",
+      "description": "Search or answer using only the selected files in this project.",
+      "results": "{count} results"
+    },
+    "question": {
+      "title": "Question",
+      "prompt": "Prompt",
+      "placeholder": "Ask a question about this project's indexed content...",
+      "resultLimit": "Result limit",
+      "search": "Search",
+      "searching": "Searching",
+      "askAI": "Ask AI",
+      "asking": "Asking"
+    },
+    "context": {
+      "title": "Context",
+      "selected": "{count} selected",
+      "loading": "Loading...",
+      "empty": "Select at least one file before asking.",
+      "openFiles": "Open files"
+    },
+    "results": {
+      "title": "Search results",
+      "empty": "No results yet",
+      "emptyDescription": "Run a search to inspect the matching context from your selected files.",
+      "score": "Score {score}",
+      "page": "p. {page}"
+    },
+    "answer": {
+      "title": "Answer",
+      "empty": "No answer generated yet",
+      "emptyDescription": "Ask a question to generate a grounded answer.",
+      "grounded": "Grounded in {count} selected {files, plural, one {file} other {files}}",
+      "groundedList": ": {list}",
+      "copy": "Copy",
+      "copied": "Answer copied"
+    },
+    "voice": {
+      "added": "Voice question added"
+    }
+  },
+  "agent": {
+    "sidebar": {
+      "title": "Chats",
+      "refresh": "Refresh",
+      "new": "New",
+      "empty": "No sessions yet",
+      "untitled": "Untitled",
+      "delete": "Delete",
+      "deleteConfirm": "Delete?",
+      "cancel": "Cancel",
+      "time": {
+        "now": "now",
+        "minutes": "{count}m",
+        "hours": "{count}h",
+        "days": "{count}d"
+      }
+    },
+    "window": {
+      "empty": "Ask anything about this project",
+      "emptyDescription": "The agent answers from the project's indexed knowledge. Pick a previous chat or start typing below.",
+      "loading": "Loading conversation...",
+      "typing": "Assistant is typing...",
+      "dismissError": "Dismiss error"
+    },
+    "input": {
+      "placeholder": "Ask the agent...",
+      "send": "Send",
+      "stop": "Stop",
+      "hint": "Enter to send / Shift+Enter for new line",
+      "charLimit": "{current}/{max}"
+    },
+    "message": {
+      "sources": "{count} sources",
+      "hideSources": "Hide sources",
+      "trace": "Trace ({count})",
+      "hideTrace": "Hide trace",
+      "failed": "Failed to get an answer",
+      "retry": "Retry"
+    }
+  },
+  "translate": {
+    "page": {
+      "kicker": "Translation",
+      "title": "Translate",
+      "description": "Create translation jobs from selected project files. Large documents may take a few minutes."
+    },
+    "createJob": {
+      "title": "Create job",
+      "projectFile": "Project file",
+      "selectFile": "Select a project file",
+      "loadingFiles": "Loading project files...",
+      "uploadFirst": "Upload a file on the Files page first",
+      "selectedFile": "Selected: {name} ({id})",
+      "usingSelected": "Using the selected file for this project.",
+      "selectOnFilesPage": "Select or upload a file on the Files page first.",
+      "filesPage": "Files page",
+      "sourceLang": "Source language",
+      "targetLang": "Target language",
+      "differentRequired": "Source and target must be different.",
+      "create": "Create translation",
+      "creating": "Creating",
+      "checkStatus": "Check status",
+      "checking": "Checking"
+    },
+    "jobStatus": {
+      "title": "Job status",
+      "jobId": "Job ID",
+      "notCreated": "Not created",
+      "status": "Status",
+      "waiting": "Waiting",
+      "resultFile": "Result file",
+      "notAvailable": "Not available",
+      "download": "Download translated file",
+      "downloading": "Downloading"
+    },
+    "processing": {
+      "title": "Translating on server...",
+      "elapsed": "({time})",
+      "hint": "Auto-checking every 2 seconds.",
+      "minutes": "{m}m {s}s",
+      "seconds": "{s}s"
+    },
+    "languages": {
+      "en": "English (en)",
+      "ar": "Arabic (ar)"
+    }
+  },
+  "voice": {
+    "page": {
+      "kicker": "Voice",
+      "title": "Voice AI",
+      "description": "Record a voice question and get a grounded spoken answer from project files."
+    },
+    "recorder": {
+      "recording": "Recording...",
+      "processing": "Processing...",
+      "ready": "Ready",
+      "recordingHint": "Speak clearly into your microphone",
+      "processingHint": "Generating response...",
+      "readyHint": "Press Record to ask by voice",
+      "selectFilesFirst": "Select files first",
+      "record": "Record",
+      "stop": "Stop",
+      "stopping": "Stop"
+    },
+    "context": {
+      "title": "Context",
+      "selectedFiles": "{count} selected files",
+      "loading": "Loading...",
+      "selectBeforeRecording": "Select files before recording.",
+      "openFiles": "Open files",
+      "lastRecording": "Last recording"
+    },
+    "transcript": {
+      "title": "Transcript",
+      "processing": "Processing audio...",
+      "empty": "No transcript yet",
+      "emptyDescription": "Record a question to see what was heard."
+    },
+    "answer": {
+      "title": "Answer",
+      "empty": "No answer generated yet",
+      "emptyDescription": "Record a question to hear a grounded spoken answer.",
+      "generating": "Generating answer..."
+    },
+    "button": {
+      "voice": "Voice",
+      "stop": "Stop",
+      "recordVoice": "Record voice question",
+      "stopRecording": "Stop recording"
+    },
+    "errors": {
+      "notUnderstood": "Couldn't understand the audio. Please try again."
+    }
+  },
+  "feedback": {
+    "helpful": "Helpful",
+    "notHelpful": "Not helpful",
+    "sent": "Sent",
+    "thanks": "Thanks for your feedback",
+    "failed": "Could not send feedback",
+    "commentPlaceholder": "What went wrong? (optional)",
+    "sendFeedback": "Send feedback",
+    "sending": "Sending...",
+    "cancel": "Cancel"
+  },
+  "notifications": {
+    "dismiss": "Dismiss notification"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "en": "English",
+    "ar": "العربية"
+  },
+  "brand": {
+    "name": "Voxora",
+    "tagline": "AI knowledge infrastructure for serious work.",
+    "description": "Retrieval-augmented generation, document intelligence, conversational agents, and voice AI — unified in one platform.",
+    "features": {
+      "rag": {
+        "title": "RAG",
+        "description": "Grounded answers from your documents"
+      },
+      "agents": {
+        "title": "Agents",
+        "description": "Multi-turn contextual conversations"
+      },
+      "voice": {
+        "title": "Voice",
+        "description": "Speak, listen, transcribe, respond"
+      },
+      "translate": {
+        "title": "Translate",
+        "description": "Cross-language document processing"
+      }
+    }
+  },
+  "emptyState": {
+    "noProjects": "No projects yet",
+    "noProjectsDescription": "Open one by ID above to get started.",
+    "noFiles": "No files yet",
+    "noFilesDescription": "Upload a source file below to start building this project's index.",
+    "noResults": "No results yet",
+    "noResultsDescription": "Run a search to inspect the matching context from your selected files.",
+    "noAnswer": "No answer generated yet",
+    "noAnswerDescription": "Ask a question to generate a grounded answer.",
+    "noTranscript": "No transcript yet",
+    "noTranscriptDescription": "Record a question to see what was heard.",
+    "noVoiceAnswer": "No answer generated yet",
+    "noVoiceAnswerDescription": "Record a question to hear a grounded spoken answer."
+  }
+}

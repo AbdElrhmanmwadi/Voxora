@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react'
 import MessageBubble from './MessageBubble'
+import { useI18n } from '../core/i18n'
 
 export default function ChatWindow({ messages = [], isLoading, error, onRetry, projectId, sessionId }) {
   const ref = useRef(null)
   const stickToBottomRef = useRef(true)
   const prevLenRef = useRef(0)
   const [dismissedError, setDismissedError] = useState(null)
+  const { t } = useI18n()
 
   const handleScroll = () => {
     const el = ref.current
@@ -34,7 +36,7 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry, p
           <span>{error}</span>
           <button
             onClick={() => setDismissedError(error)}
-            aria-label="Dismiss error"
+            aria-label={t('agent.window.dismissError')}
             className="shrink-0 opacity-70 hover:opacity-100"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -48,8 +50,8 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry, p
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
             </svg>
           </div>
-          <div className="text-sm font-bold font-display">Ask anything about this project</div>
-          <div className="max-w-sm text-sm text-muted-foreground">The agent answers from the project's indexed knowledge. Pick a previous chat or start typing below.</div>
+          <div className="text-sm font-bold font-display">{t('agent.window.empty')}</div>
+          <div className="max-w-sm text-sm text-muted-foreground">{t('agent.window.emptyDescription')}</div>
         </div>
       )}
 
@@ -69,7 +71,7 @@ export default function ChatWindow({ messages = [], isLoading, error, onRetry, p
           )
         })}
         {isLoading && !streamingNow && (
-          <div className="text-sm text-muted-foreground">{messages.length === 0 ? 'Loading conversation...' : 'Assistant is typing...'}</div>
+          <div className="text-sm text-muted-foreground">{messages.length === 0 ? t('agent.window.loading') : t('agent.window.typing')}</div>
         )}
       </div>
     </div>

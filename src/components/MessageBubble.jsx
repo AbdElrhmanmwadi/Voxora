@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import FeedbackButtons from '../features/feedback/components/FeedbackButtons'
+import { useI18n } from '../core/i18n'
 
 function sourceTitle(src, index) {
   const meta = src.metadata || {}
@@ -40,6 +41,7 @@ export default function MessageBubble({ message, onRetry, projectId, sessionId, 
   const isUser = message.role === 'user'
   const [showSources, setShowSources] = useState(false)
   const [showTrace, setShowTrace] = useState(false)
+  const { t } = useI18n()
 
   const sources = message.sources || (message.metadata && message.metadata.sources) || []
   const trace = message.tool_trace || (message.metadata && message.metadata.tool_trace) || []
@@ -68,9 +70,9 @@ export default function MessageBubble({ message, onRetry, projectId, sessionId, 
 
         {failed && (
           <div className="mt-2 flex items-center gap-2 text-xs text-destructive">
-            <span>{message.error || 'Failed to get an answer'}</span>
+            <span>{message.error || t('agent.message.failed')}</span>
             {onRetry && (
-              <button onClick={onRetry} className="font-semibold underline underline-offset-2 hover:opacity-80">Retry</button>
+              <button onClick={onRetry} className="font-semibold underline underline-offset-2 hover:opacity-80">{t('agent.message.retry')}</button>
             )}
           </div>
         )}
@@ -79,12 +81,12 @@ export default function MessageBubble({ message, onRetry, projectId, sessionId, 
           <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
             {sources.length > 0 && (
               <button onClick={() => setShowSources((s) => !s)} className="font-semibold underline underline-offset-2">
-                {showSources ? 'Hide sources' : `${sources.length} sources`}
+                {showSources ? t('agent.message.hideSources') : t('agent.message.sources', { count: sources.length })}
               </button>
             )}
             {trace.length > 0 && (
               <button onClick={() => setShowTrace((s) => !s)} className="font-semibold underline underline-offset-2">
-                {showTrace ? 'Hide trace' : `Trace (${trace.length})`}
+                {showTrace ? t('agent.message.hideTrace') : t('agent.message.trace', { count: trace.length })}
               </button>
             )}
           </div>
@@ -98,10 +100,10 @@ export default function MessageBubble({ message, onRetry, projectId, sessionId, 
 
         {!isUser && showTrace && (
           <div className="mt-3 text-xs text-muted-foreground">
-            {trace.map((t, i) => (
+            {trace.map((t_, i) => (
               <div key={i} className="mb-2 rounded-md border bg-background p-2">
-                <div className="font-bold font-display">{t.name || t.signal || t.step || `step ${i + 1}`}</div>
-                <pre className="mt-1 whitespace-pre-wrap text-xs">{JSON.stringify(t, null, 2)}</pre>
+                <div className="font-bold font-display">{t_.name || t_.signal || t_.step || `step ${i + 1}`}</div>
+                <pre className="mt-1 whitespace-pre-wrap text-xs">{JSON.stringify(t_, null, 2)}</pre>
               </div>
             ))}
           </div>

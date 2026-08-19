@@ -9,10 +9,11 @@ import Badge from '../../../core/ui/Badge'
 import Progress from '../../../core/ui/Progress'
 import EmptyState from '../../../core/ui/EmptyState'
 import StatusBadge from '../../../core/components/StatusBadge'
+import { useI18n } from '../../../core/i18n'
 
-function formatFileSize(size: number) {
-  if (!Number.isFinite(size) || size <= 0) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB']
+function formatFileSize(size: number, t: (key: string) => string) {
+  if (!Number.isFinite(size) || size <= 0) return `0 ${t('files.size.B')}`
+  const units = [t('files.size.B'), t('files.size.KB'), t('files.size.MB'), t('files.size.GB')]
   let value = size
   let unitIndex = 0
   while (value >= 1024 && unitIndex < units.length - 1) {
@@ -30,6 +31,7 @@ export default function FilesPage() {
   const [overlap, setOverlap] = useState(50)
   const [doReset, setDoReset] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const { t } = useI18n()
 
   const {
     fileId,
@@ -66,21 +68,21 @@ export default function FilesPage() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <p className="page-kicker">Library</p>
-          <h1 className="page-title">Files</h1>
-          <p className="page-description">Upload source material, select project files, tune processing, and push content into the index.</p>
+          <p className="page-kicker">{t('files.page.kicker')}</p>
+          <h1 className="page-title">{t('files.page.title')}</h1>
+          <p className="page-description">{t('files.page.description')}</p>
         </div>
         <StatusBadge status={selectedFileIds.length > 0 ? 'success' : isLoadingFiles ? 'loading' : 'idle'} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
-          <AppCard title="Project files">
+          <AppCard title={t('files.list.title')}>
             <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{files.length} files</Badge>
-                  <Badge variant="outline">{selectedFileIds.length} selected</Badge>
+                  <Badge variant="secondary">{t('files.list.files', { count: files.length })}</Badge>
+                  <Badge variant="outline">{t('files.list.selected', { count: selectedFileIds.length })}</Badge>
                 </div>
                 <div className="flex gap-2">
                   <Button
@@ -90,17 +92,17 @@ export default function FilesPage() {
                     onClick={() => setSelectedFileIds(activeProjectId, files.map((file) => String(file.file_id)))}
                     disabled={!files.length || isLoadingFiles}
                   >
-                    Select all
+                    {t('files.list.selectAll')}
                   </Button>
                   <Button type="button" size="sm" variant="ghost" onClick={() => clearSelectedFiles(activeProjectId)} disabled={!selectedFileIds.length}>
-                    Clear
+                    {t('files.list.clear')}
                   </Button>
                 </div>
               </div>
 
-              {isLoadingFiles && <div className="rounded-md bg-muted/30 p-3 text-sm text-muted-foreground">Loading project files...</div>}
+              {isLoadingFiles && <div className="rounded-md bg-muted/30 p-3 text-sm text-muted-foreground">{t('files.list.loading')}</div>}
               {!isLoadingFiles && files.length === 0 && (
-                <EmptyState title="No files yet" description="Upload a source file below to start building this project's index." />
+                <EmptyState title={t('files.list.empty')} description={t('files.list.emptyDescription')} />
               )}
               <div className="divide-y rounded-md border">
                 {files.map((file) => {
@@ -118,14 +120,14 @@ export default function FilesPage() {
                         <span className="flex items-center gap-2">
                           <span className="truncate text-sm font-medium">{file.file_name}</span>
                           {file.processed ? (
-                            <Badge variant="success">Processed</Badge>
+                            <Badge variant="success">{t('files.list.processed')}</Badge>
                           ) : (
-                            <Badge variant="warning">Not processed</Badge>
+                            <Badge variant="warning">{t('files.list.notProcessed')}</Badge>
                           )}
                         </span>
                         <span className="mt-0.5 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                          <span>{formatFileSize(file.file_size)}</span>
-                          {file.processed && <span>· {file.chunk_count ?? 0} chunks</span>}
+                          <span>{formatFileSize(file.file_size, t)}</span>
+                          {file.processed && <span>· {t('files.list.chunks', { count: file.chunk_count ?? 0 })}</span>}
                         </span>
                       </span>
                     </label>
@@ -135,60 +137,60 @@ export default function FilesPage() {
             </div>
           </AppCard>
 
-          <AppCard title="Upload file">
+          <AppCard title={t('files.upload.title')}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="field-label" htmlFor="asset-file">Source file</label>
+                <label className="field-label" htmlFor="asset-file">{t('files.upload.label')}</label>
                 <Input id="asset-file" type="file" accept=".txt,.md,.pdf,.docx,.csv,.html" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} />
-                <p className="field-hint">Supported: TXT, MD, PDF, DOCX, CSV, HTML.</p>
+                <p className="field-hint">{t('files.upload.hint')}</p>
               </div>
               {selected && (
                 <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
-                  <span className="text-muted-foreground">Selected: </span>
+                  <span className="text-muted-foreground">{t('files.upload.selected', { name: '' }).split(':')[0]}: </span>
                   <span className="font-medium">{selected.name}</span>
                 </div>
               )}
               <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || isUploading || !activeProjectId}>
-                {isUploading ? <><LoadingSpinner size={4} /> Uploading</> : 'Upload file'}
+                {isUploading ? <><LoadingSpinner size={4} /> {t('files.upload.uploading')}</> : t('files.upload.submit')}
               </Button>
               {isUploading && uploadProgress !== null && (
                 <div className="space-y-2" aria-live="polite">
                   <Progress value={uploadProgress} aria-label="Upload progress" />
                   <p className="field-hint">
-                    {uploadProgress < 100 ? `Uploading... ${uploadProgress}%` : 'Upload complete — finalizing on server...'}
+                    {uploadProgress < 100 ? t('files.upload.uploadingProgress', { percent: uploadProgress }) : t('files.upload.uploadComplete')}
                   </p>
                 </div>
               )}
             </div>
           </AppCard>
 
-          <AppCard title="Process and index">
+          <AppCard title={t('files.process.title')}>
             <div className="space-y-4">
               <div className="flex flex-col gap-2 rounded-md border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-sm text-muted-foreground">File to process</span>
-                <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{processingFileId ?? 'Select a project file'}</code>
+                <span className="text-sm text-muted-foreground">{t('files.process.fileToProcess')}</span>
+                <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{processingFileId ?? t('files.process.selectFile')}</code>
               </div>
               {processingFileId && (
                 <Link
                   to={`/projects/${activeProjectId}/translate?fileId=${encodeURIComponent(processingFileId)}`}
                   className="inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
                 >
-                  Translate this file
+                  {t('files.process.translateFile')}
                 </Link>
               )}
 
               <Button variant="outline" size="sm" onClick={() => setShowAdvanced((s) => !s)}>
-                {showAdvanced ? 'Hide advanced options' : 'Show advanced options'}
+                {showAdvanced ? t('files.process.hideAdvanced') : t('files.process.showAdvanced')}
               </Button>
 
               {showAdvanced && (
                 <div className="grid gap-4 rounded-md border bg-muted/10 p-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="field-label" htmlFor="chunk-size">Chunk size</label>
+                    <label className="field-label" htmlFor="chunk-size">{t('files.process.chunkSize')}</label>
                     <Input id="chunk-size" type="number" min={1} value={chunkSize} onChange={(e) => setChunkSize(Number(e.target.value))} />
                   </div>
                   <div className="space-y-2">
-                    <label className="field-label" htmlFor="overlap">Overlap</label>
+                    <label className="field-label" htmlFor="overlap">{t('files.process.overlap')}</label>
                     <Input id="overlap" type="number" min={0} value={overlap} onChange={(e) => setOverlap(Number(e.target.value))} />
                   </div>
                   <label className="flex min-h-10 items-center gap-2 text-sm font-medium sm:col-span-2">
@@ -198,7 +200,7 @@ export default function FilesPage() {
                       onChange={(e) => setDoReset(e.target.checked)}
                       className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                     />
-                    Reset index before running
+                    {t('files.process.resetIndex')}
                   </label>
                 </div>
               )}
@@ -215,27 +217,27 @@ export default function FilesPage() {
                   }
                   disabled={!processingFileId || isProcessing}
                 >
-                  {isProcessing ? <><LoadingSpinner size={4} /> Processing</> : 'Process file'}
+                  {isProcessing ? <><LoadingSpinner size={4} /> {t('files.process.processing')}</> : t('files.process.processFile')}
                 </Button>
                 <Button onClick={() => pushIndex(activeProjectId, doReset)} disabled={isIndexing || !activeProjectId} variant="outline">
-                  {isIndexing ? <><LoadingSpinner size={4} /> Indexing</> : 'Push index'}
+                  {isIndexing ? <><LoadingSpinner size={4} /> {t('files.process.indexing')}</> : t('files.process.pushIndex')}
                 </Button>
               </div>
               {selectedFiles.length > 1 && (
-                <p className="field-hint">Processing uses the first selected file. Ask and Voice can use all selected files as context.</p>
+                <p className="field-hint">{t('files.process.hint')}</p>
               )}
             </div>
           </AppCard>
         </div>
 
-        <AppCard title="Activity log">
+        <AppCard title={t('files.activityLog.title')}>
           <div className="space-y-3">
-            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">Error: {error}</div>}
+            {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{t('common.error')}: {error}</div>}
             <div className="flex items-center justify-between">
-              <Badge variant="secondary">{logs.length} events</Badge>
+              <Badge variant="secondary">{t('files.activityLog.events', { count: logs.length })}</Badge>
             </div>
-            <ul className="log-panel" aria-label="Activity log" aria-live="polite">
-              {logs.length === 0 && <li>No activity yet.</li>}
+            <ul className="log-panel" aria-label={t('files.activityLog.title')} aria-live="polite">
+              {logs.length === 0 && <li>{t('files.activityLog.empty')}</li>}
               {logs.map((l, i) => (
                 <li key={i} className="break-words">{l}</li>
               ))}

@@ -7,34 +7,35 @@ import Button from '../../../core/ui/Button'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import AuthLayout from '../../../core/layout/AuthLayout'
 import { useAuth } from '../../../core/auth/AuthContext'
+import { useI18n } from '../../../core/i18n'
 import { ApiClientError } from '../../../core/api/axiosClient'
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-function loginErrorMessage(err: unknown): string {
+function loginErrorMessage(err: unknown, t: (key: string) => string): string {
   if (!(err instanceof ApiClientError)) {
-    return err instanceof Error ? err.message : 'Unable to log in.'
+    return err instanceof Error ? err.message : t('auth.errors.genericLogin')
   }
-  if (err.status === 401) return 'Invalid email or password.'
+  if (err.status === 401) return t('auth.errors.invalidCredentials')
   if (err.status === 403) {
     if (err.message.toLowerCase().includes('google')) {
-      return 'This account uses Google sign-in. Use the Google button below.'
+      return t('auth.errors.googleAccount')
     }
-    return 'Email is not verified. Please check your inbox.'
+    return t('auth.errors.notVerified')
   }
   return err.message
 }
 
-function googleLoginErrorMessage(err: unknown): string {
+function googleLoginErrorMessage(err: unknown, t: (key: string) => string): string {
   if (!(err instanceof ApiClientError)) {
-    return err instanceof Error ? err.message : 'Google sign-in failed.'
+    return err instanceof Error ? err.message : t('auth.errors.googleFailed')
   }
-  if (err.status === 401) return 'Invalid or expired Google sign-in. Please try again.'
-  if (err.status === 403) return 'Your Google email is not verified.'
+  if (err.status === 401) return t('auth.errors.googleInvalid')
+  if (err.status === 403) return t('auth.errors.googleNotVerified')
   if (err.status === 409) {
-    return 'This email is linked to a different Google account. Sign in with your password or use the correct Google account.'
+    return t('auth.errors.googleAccountMismatch')
   }
-  if (err.status === 503) return 'Google sign-in is not configured on the server.'
+  if (err.status === 503) return t('auth.errors.googleNotConfigured')
   return err.message
 }
 
@@ -45,6 +46,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const { login, loginWithGoogle } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/'
@@ -58,7 +60,7 @@ export default function LoginPage() {
       await login(email, password)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(loginErrorMessage(err))
+      setError(loginErrorMessage(err, t))
     } finally {
       setLoading(false)
     }
@@ -72,7 +74,7 @@ export default function LoginPage() {
       await loginWithGoogle(credential)
       navigate(from, { replace: true })
     } catch (err) {
-      setError(googleLoginErrorMessage(err))
+      setError(googleLoginErrorMessage(err, t))
     } finally {
       setGoogleLoading(false)
     }
@@ -83,27 +85,27 @@ export default function LoginPage() {
   return (
     <AuthLayout>
       <div>
-        <h2 className="text-2xl font-bold tracking-tight font-display">Sign in</h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">Access your Voxora workspace.</p>
+        <h2 className="text-2xl font-bold tracking-tight font-display">{t('auth.login.title')}</h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">{t('auth.login.description')}</p>
       </div>
 
       <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
         <div className="space-y-2">
-          <label className="field-label" htmlFor="email">Email</label>
+          <label className="field-label" htmlFor="email">{t('auth.login.email')}</label>
           <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="field-label" htmlFor="password">Password</label>
+            <label className="field-label" htmlFor="password">{t('auth.login.password')}</label>
             <Link to="/auth/forgot-password" className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-              Forgot password?
+              {t('auth.login.forgotPassword')}
             </Link>
           </div>
           <PasswordInput id="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
         {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
         <Button type="submit" className="w-full" disabled={busy}>
-          {loading ? <><LoadingSpinner size={4} /> Signing in</> : 'Sign in'}
+          {loading ? <><LoadingSpinner size={4} /> {t('auth.login.submitting')}</> : t('auth.login.submit')}
         </Button>
       </form>
 
@@ -114,16 +116,16 @@ export default function LoginPage() {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground font-display tracking-wider">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground font-display tracking-wider">{t('auth.login.orContinueWith')}</span>
             </div>
           </div>
           <div className={`flex justify-center ${busy ? 'pointer-events-none opacity-60' : ''}`}>
             <GoogleLogin
               onSuccess={(response) => {
                 if (response.credential) void handleGoogleSuccess(response.credential)
-                else setError('Google sign-in did not return a credential.')
+                else setError(t('auth.errors.googleNoCredential'))
               }}
-              onError={() => setError('Google sign-in was cancelled or failed.')}
+              onError={() => setError(t('auth.errors.googleCancelled'))}
               text="signin_with"
               shape="rectangular"
               theme="outline"
@@ -133,14 +135,14 @@ export default function LoginPage() {
           </div>
           {googleLoading && (
             <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <LoadingSpinner size={4} /> Signing in with Google
+              <LoadingSpinner size={4} /> {t('auth.login.googleSigningIn')}
             </p>
           )}
         </div>
       )}
 
       <p className="mt-8 text-center text-sm text-muted-foreground">
-        New to Voxora? <Link to="/register" className="font-semibold text-foreground underline-offset-4 hover:underline">Create an account</Link>
+        {t('auth.login.noAccount')} <Link to="/register" className="font-semibold text-foreground underline-offset-4 hover:underline">{t('auth.login.register')}</Link>
       </p>
     </AuthLayout>
   )

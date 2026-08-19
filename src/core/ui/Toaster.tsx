@@ -1,6 +1,7 @@
 import React from 'react'
 import { cn } from '../utils/cn'
 import { useToastStore, type ToastVariant } from './toast'
+import { useI18n } from '../i18n'
 
 const variantStyles: Record<ToastVariant, string> = {
   success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
@@ -11,6 +12,7 @@ const variantStyles: Record<ToastVariant, string> = {
 export default function Toaster() {
   const toasts = useToastStore((state) => state.toasts)
   const dismiss = useToastStore((state) => state.dismiss)
+  const { t } = useI18n()
 
   return (
     <div
@@ -18,26 +20,26 @@ export default function Toaster() {
       aria-live="polite"
       aria-atomic="false"
     >
-      {toasts.map((t) => (
+      {toasts.map((toast) => (
         <div
-          key={t.id}
+          key={toast.id}
           role="status"
           className={cn(
             'pointer-events-auto w-full max-w-sm animate-slide-in rounded-md border p-3 shadow-md',
-            variantStyles[t.variant]
+            variantStyles[toast.variant]
           )}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-bold font-display">{t.title}</p>
-              {t.description && (
-                <p className="mt-0.5 break-words text-xs leading-5 opacity-90">{t.description}</p>
+              <p className="text-sm font-bold font-display">{toast.title}</p>
+              {toast.description && (
+                <p className="mt-0.5 break-words text-xs leading-5 opacity-90">{toast.description}</p>
               )}
             </div>
             <button
               type="button"
-              onClick={() => dismiss(t.id)}
-              aria-label="Dismiss notification"
+              onClick={() => dismiss(toast.id)}
+              aria-label={t('notifications.dismiss')}
               className="shrink-0 rounded p-0.5 text-base leading-none opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               &times;

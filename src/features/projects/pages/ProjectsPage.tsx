@@ -4,6 +4,7 @@ import Input from '../../../core/ui/Input'
 import Button from '../../../core/ui/Button'
 import FormField from '../../../core/ui/FormField'
 import EmptyState from '../../../core/ui/EmptyState'
+import { useI18n } from '../../../core/i18n'
 import {
   forgetProject,
   listRecentProjects,
@@ -11,15 +12,15 @@ import {
   type RecentProject
 } from '../recentProjects'
 
-function relativeTime(ts: number) {
+function relativeTime(ts: number, t: (key: string, params?: Record<string, string | number>) => string) {
   const diff = Date.now() - ts
   const mins = Math.round(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins} min ago`
+  if (mins < 1) return t('projects.time.justNow')
+  if (mins < 60) return t('projects.time.minutesAgo', { count: mins })
   const hours = Math.round(mins / 60)
-  if (hours < 24) return `${hours} h ago`
+  if (hours < 24) return t('projects.time.hoursAgo', { count: hours })
   const days = Math.round(hours / 24)
-  return `${days} d ago`
+  return t('projects.time.daysAgo', { count: days })
 }
 
 export default function ProjectsPage() {
@@ -28,6 +29,7 @@ export default function ProjectsPage() {
   const [error, setError] = useState<string | null>(null)
   const [projects, setProjects] = useState<RecentProject[]>([])
   const nav = useNavigate()
+  const { t } = useI18n()
 
   useEffect(() => {
     setProjects(listRecentProjects())
@@ -41,7 +43,7 @@ export default function ProjectsPage() {
   function submit() {
     setError(null)
     const id = projectId.trim()
-    if (!/^[0-9]+$/.test(id)) return setError('Project ID must be numeric')
+    if (!/^[0-9]+$/.test(id)) return setError(t('projects.open.errorNumeric'))
     open(id, name)
   }
 
@@ -54,17 +56,17 @@ export default function ProjectsPage() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <p className="page-kicker">Workspace</p>
-          <h1 className="page-title">Projects</h1>
-          <p className="page-description">Open a project to manage files, retrieval, translation, and voice workflows.</p>
+          <p className="page-kicker">{t('projects.page.kicker')}</p>
+          <h1 className="page-title">{t('projects.page.title')}</h1>
+          <p className="page-description">{t('projects.page.description')}</p>
         </div>
       </div>
 
       <div className="rounded-md border bg-card p-6">
-        <h2 className="text-sm font-bold font-display tracking-tight">Open a project</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Enter a project ID to open it. Names are saved locally.</p>
+        <h2 className="text-sm font-bold font-display tracking-tight">{t('projects.open.title')}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t('projects.open.description')}</p>
         <div className="mt-5 grid gap-4 sm:grid-cols-[160px_minmax(0,1fr)_auto] sm:items-start">
-          <FormField label="Project ID" error={error}>
+          <FormField label={t('projects.open.projectId')} error={error}>
             {(field) => (
               <Input
                 {...field}
@@ -72,35 +74,35 @@ export default function ProjectsPage() {
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
-                placeholder="e.g. 1024"
+                placeholder={t('projects.open.projectIdPlaceholder')}
               />
             )}
           </FormField>
-          <FormField label="Name (optional)">
+          <FormField label={t('projects.open.name')}>
             {(field) => (
               <Input
                 {...field}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
-                placeholder="e.g. Q3 Research"
+                placeholder={t('projects.open.namePlaceholder')}
               />
             )}
           </FormField>
-          <Button onClick={submit} className="w-full sm:mt-7 sm:w-auto">Open project</Button>
+          <Button onClick={submit} className="w-full sm:mt-7 sm:w-auto">{t('projects.open.submit')}</Button>
         </div>
       </div>
 
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground font-display">Recent projects</h2>
-          {projects.length > 0 && <span className="text-xs text-muted-foreground">{projects.length} saved</span>}
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground font-display">{t('projects.recent.title')}</h2>
+          {projects.length > 0 && <span className="text-xs text-muted-foreground">{t('projects.recent.saved', { count: projects.length })}</span>}
         </div>
 
         {projects.length === 0 ? (
           <EmptyState
-            title="No projects yet"
-            description="Open one by ID above to get started."
+            title={t('projects.recent.empty')}
+            description={t('projects.recent.emptyDescription')}
             className="p-10"
           />
         ) : (
@@ -116,12 +118,12 @@ export default function ProjectsPage() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{p.name}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">ID {p.id} · opened {relativeTime(p.lastOpenedAt)}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{t('projects.recent.id', { id: p.id })} · {t('projects.recent.opened', { time: relativeTime(p.lastOpenedAt, t) })}</p>
                 </div>
                 <button
                   type="button"
                   onClick={(e) => remove(e, p.id)}
-                  aria-label={`Remove ${p.name} from recent projects`}
+                  aria-label={t('projects.recent.remove', { name: p.name })}
                   className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>

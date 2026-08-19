@@ -4,6 +4,7 @@ import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import useAudioRecorder from '../hooks/useAudioRecorder'
 import { sttUpload } from '../api/voiceApi'
 import { mapVoiceError } from '../voiceErrors'
+import { useI18n } from '../../../core/i18n'
 
 type Props = {
   disabled?: boolean
@@ -16,6 +17,7 @@ export default function VoiceRecordButton({ disabled, className, onTranscript, o
   const { start, stop, recording, error: micError } = useAudioRecorder()
   const [transcribing, setTranscribing] = useState(false)
   const reportedMicErrorRef = useRef<string | null>(null)
+  const { t } = useI18n()
 
   useEffect(() => {
     if (micError && micError !== reportedMicErrorRef.current) {
@@ -38,7 +40,7 @@ export default function VoiceRecordButton({ disabled, className, onTranscript, o
       const data = await sttUpload(audio)
       const transcript = data.text?.trim()
       if (transcript) await onTranscript(transcript)
-      else onError?.("Couldn't understand the audio. Please try again.")
+      else onError?.(t('voice.errors.notUnderstood'))
     } catch (e) {
       onError?.(mapVoiceError(e).message)
     } finally {
@@ -56,15 +58,15 @@ export default function VoiceRecordButton({ disabled, className, onTranscript, o
       onClick={handleClick}
       disabled={disabled || transcribing}
       aria-pressed={recording}
-      aria-label={recording ? 'Stop recording' : 'Record voice question'}
-      title={recording ? 'Stop recording' : 'Record voice question'}
+      aria-label={recording ? t('voice.button.stopRecording') : t('voice.button.recordVoice')}
+      title={recording ? t('voice.button.stopRecording') : t('voice.button.recordVoice')}
       className={className}
     >
       {transcribing && <LoadingSpinner size={4} />}
       {recording ? (
         <>
           <span className="h-2 w-2 rounded-full bg-destructive-foreground animate-pulse-soft" />
-          Stop
+          {t('voice.button.stop')}
         </>
       ) : (
         <>
@@ -72,7 +74,7 @@ export default function VoiceRecordButton({ disabled, className, onTranscript, o
             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
             <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
           </svg>
-          Voice
+          {t('voice.button.voice')}
         </>
       )}
     </Button>

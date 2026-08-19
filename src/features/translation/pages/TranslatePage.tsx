@@ -12,11 +12,12 @@ import Select from '../../../core/ui/Select'
 import Badge from '../../../core/ui/Badge'
 import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import StatusBadge from '../../../core/components/StatusBadge'
+import { useI18n } from '../../../core/i18n'
 import { cn } from '../../../core/utils/cn'
 
 const LANG_OPTIONS = [
-  { value: 'en', label: 'English (en)' },
-  { value: 'ar', label: 'Arabic (ar)' }
+  { value: 'en', labelKey: 'translate.languages.en' },
+  { value: 'ar', labelKey: 'translate.languages.ar' }
 ] as const
 
 type LangCode = (typeof LANG_OPTIONS)[number]['value']
@@ -43,6 +44,7 @@ function isTerminalSuccess(status: string | null) {
 export default function TranslatePage() {
   const { projectId } = useParams()
   const [searchParams] = useSearchParams()
+  const { t } = useI18n()
   const uploadedFileId = useFilesStore((s) => s.fileId)
   const uploadedProjectId = useFilesStore((s) => s.fileProjectId)
   const files = useFilesStore((s) => s.files)
@@ -117,8 +119,8 @@ export default function TranslatePage() {
   const elapsedLabel = useMemo(() => {
     const m = Math.floor(elapsedSeconds / 60)
     const s = elapsedSeconds % 60
-    return m > 0 ? `${m}m ${s}s` : `${s}s`
-  }, [elapsedSeconds])
+    return m > 0 ? t('translate.processing.minutes', { m, s }) : t('translate.processing.seconds', { s })
+  }, [elapsedSeconds, t])
 
   const headerBadgeStatus = useMemo(() => {
     if (creating || isInProgress(status)) return 'loading' as const
@@ -157,23 +159,21 @@ export default function TranslatePage() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <p className="page-kicker">Translation</p>
-          <h1 className="page-title">Translate</h1>
-          <p className="page-description">
-            Create translation jobs from selected project files. Large documents may take a few minutes.
-          </p>
+          <p className="page-kicker">{t('translate.page.kicker')}</p>
+          <h1 className="page-title">{t('translate.page.title')}</h1>
+          <p className="page-description">{t('translate.page.description')}</p>
         </div>
         <StatusBadge status={headerBadgeStatus} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <AppCard title="Create job">
+        <AppCard title={t('translate.createJob.title')}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="field-label" htmlFor="file-id">Project file</label>
+              <label className="field-label" htmlFor="file-id">{t('translate.createJob.projectFile')}</label>
               {files.length > 0 ? (
                 <Select id="file-id" value={fileId} onChange={(e) => setFileId(e.target.value)}>
-                  <option value="">Select a project file</option>
+                  <option value="">{t('translate.createJob.selectFile')}</option>
                   {files.map((file) => (
                     <option key={file.file_id} value={file.file_name ?? file.file_id}>
                       {file.file_name}
@@ -185,79 +185,73 @@ export default function TranslatePage() {
                   id="file-id"
                   value={fileId}
                   onChange={(e) => setFileId(e.target.value)}
-                  placeholder={isLoadingFiles ? 'Loading project files...' : 'Upload a file on the Files page first'}
+                  placeholder={isLoadingFiles ? t('translate.createJob.loadingFiles') : t('translate.createJob.uploadFirst')}
                 />
               )}
               {selectedFile ? (
-                <p className="field-hint">Selected: {selectedFile.file_name} ({selectedFile.file_id})</p>
+                <p className="field-hint">{t('translate.createJob.selectedFile', { name: selectedFile.file_name, id: selectedFile.file_id })}</p>
               ) : suggestedFileId ? (
-                <p className="field-hint">Using the selected file for this project.</p>
+                <p className="field-hint">{t('translate.createJob.usingSelected')}</p>
               ) : (
                 <p className="field-hint">
-                  Select or upload a file on the{' '}
-                  <Link to={`/projects/${projectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">
-                    Files page
-                  </Link>{' '}
-                  first.
+                  {t('translate.createJob.selectOnFilesPage')}
                 </p>
               )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="field-label" htmlFor="source-lang">Source language</label>
+                <label className="field-label" htmlFor="source-lang">{t('translate.createJob.sourceLang')}</label>
                 <Select id="source-lang" value={source} onChange={(e) => setSource(e.target.value as LangCode)}>
                   {LANG_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                   ))}
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="field-label" htmlFor="target-lang">Target language</label>
+                <label className="field-label" htmlFor="target-lang">{t('translate.createJob.targetLang')}</label>
                 <Select id="target-lang" value={target} onChange={(e) => setTarget(e.target.value as LangCode)}>
                   {LANG_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
                   ))}
                 </Select>
               </div>
             </div>
-            {!languagesValid && <p className="text-sm text-destructive">Source and target must be different.</p>}
+            {!languagesValid && <p className="text-sm text-destructive">{t('translate.createJob.differentRequired')}</p>}
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
                 onClick={() => createJob(projectId || '', fileId, source, target)}
                 disabled={creating || isInProgress(status) || !(String(fileId ?? '').trim()) || !languagesValid}
               >
-                {creating ? <><LoadingSpinner size={4} /> Creating</> : 'Create translation'}
+                {creating ? <><LoadingSpinner size={4} /> {t('translate.createJob.creating')}</> : t('translate.createJob.create')}
               </Button>
               <Button onClick={() => jobId && checkStatus(jobId)} disabled={!jobId || checking} variant="outline">
-                {checking ? <><LoadingSpinner size={4} /> Checking</> : 'Check status'}
+                {checking ? <><LoadingSpinner size={4} /> {t('translate.createJob.checking')}</> : t('translate.createJob.checkStatus')}
               </Button>
             </div>
           </div>
         </AppCard>
 
-        <AppCard title="Job status">
+        <AppCard title={t('translate.jobStatus.title')}>
           <div className="space-y-4">
             {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
             {isInProgress(status) && (
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 <p className="flex items-center gap-2 font-semibold">
                   <LoadingSpinner size={4} />
-                  Translating on server... {elapsedSeconds > 0 && <span className="font-normal opacity-80">({elapsedLabel})</span>}
+                  {t('translate.processing.title')} {elapsedSeconds > 0 && <span className="font-normal opacity-80">{t('translate.processing.elapsed', { time: elapsedLabel })}</span>}
                 </p>
-                <p className="mt-1 text-xs opacity-80">
-                  Auto-checking every 2 seconds.
-                </p>
+                <p className="mt-1 text-xs opacity-80">{t('translate.processing.hint')}</p>
               </div>
             )}
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/20 px-3 py-2">
-                <span className="text-muted-foreground">Job ID</span>
-                <code className="break-all text-right font-mono text-xs">{jobId ?? 'Not created'}</code>
+                <span className="text-muted-foreground">{t('translate.jobStatus.jobId')}</span>
+                <code className="break-all text-end font-mono text-xs">{jobId ?? t('translate.jobStatus.notCreated')}</code>
               </div>
               <div className="flex items-center justify-between gap-4 rounded-md border bg-muted/20 px-3 py-2">
-                <span className="text-muted-foreground">Status</span>
+                <span className="text-muted-foreground">{t('translate.jobStatus.status')}</span>
                 <Badge variant={jobStatusVariant} className={cn(isInProgress(status) && 'capitalize')}>
-                  {status ?? 'Waiting'}
+                  {status ?? t('translate.jobStatus.waiting')}
                 </Badge>
               </div>
               {status === 'failed' && jobErrorMessage && (
@@ -266,11 +260,11 @@ export default function TranslatePage() {
                 </div>
               )}
               <div className="space-y-2 rounded-md border bg-muted/20 px-3 py-2">
-                <span className="text-muted-foreground">Result file</span>
-                <code className="block break-all font-mono text-xs">{resultFileId ?? 'Not available'}</code>
+                <span className="text-muted-foreground">{t('translate.jobStatus.resultFile')}</span>
+                <code className="block break-all font-mono text-xs">{resultFileId ?? t('translate.jobStatus.notAvailable')}</code>
                 {jobId && isTerminalSuccess(status) && (
                   <Button type="button" className="w-full" variant="outline" disabled={downloading} onClick={() => void handleDownload()}>
-                    {downloading ? <><LoadingSpinner size={4} /> Downloading</> : 'Download translated file'}
+                    {downloading ? <><LoadingSpinner size={4} /> {t('translate.jobStatus.downloading')}</> : t('translate.jobStatus.download')}
                   </Button>
                 )}
                 {downloadError && <p className="text-sm text-destructive">{downloadError}</p>}

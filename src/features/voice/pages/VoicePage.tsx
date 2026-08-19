@@ -9,10 +9,12 @@ import LoadingSpinner from '../../../core/components/LoadingSpinner'
 import Badge from '../../../core/ui/Badge'
 import EmptyState from '../../../core/ui/EmptyState'
 import StatusBadge from '../../../core/components/StatusBadge'
+import { useI18n } from '../../../core/i18n'
 
 export default function VoicePage() {
   const { projectId } = useParams()
   const activeProjectId = projectId ?? ''
+  const { t } = useI18n()
   const { start, stop: stopRecording, recording, error: micError } = useAudioRecorder()
   const { transcript, answer, streaming, failed, error, sendAudio, retry, stop: stopStream } = useVoiceStore()
   const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
@@ -44,15 +46,13 @@ export default function VoicePage() {
     await sendAudio(activeProjectId, blob)
   }
 
-  const voiceState = recording ? 'recording' : streaming ? 'processing' : transcript ? 'done' : 'idle'
-
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
-          <p className="page-kicker">Voice</p>
-          <h1 className="page-title">Voice AI</h1>
-          <p className="page-description">Record a voice question and get a grounded spoken answer from project files.</p>
+          <p className="page-kicker">{t('voice.page.kicker')}</p>
+          <h1 className="page-title">{t('voice.page.title')}</h1>
+          <p className="page-description">{t('voice.page.description')}</p>
         </div>
         <StatusBadge status={recording || streaming ? 'loading' : transcript ? 'success' : 'idle'} />
       </div>
@@ -80,12 +80,12 @@ export default function VoicePage() {
               </div>
               <div>
                 <p className="text-sm font-bold font-display">
-                  {recording ? 'Recording...' : streaming ? 'Processing...' : 'Ready'}
+                  {recording ? t('voice.recorder.recording') : streaming ? t('voice.recorder.processing') : t('voice.recorder.ready')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {recording ? 'Speak clearly into your microphone' :
-                   streaming ? 'Generating response...' :
-                   hasSelectedFiles ? 'Press Record to ask by voice' : 'Select files first'}
+                  {recording ? t('voice.recorder.recordingHint') :
+                   streaming ? t('voice.recorder.processingHint') :
+                   hasSelectedFiles ? t('voice.recorder.readyHint') : t('voice.recorder.selectFilesFirst')}
                 </p>
               </div>
             </div>
@@ -95,13 +95,13 @@ export default function VoicePage() {
                   <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 </svg>
-                Record
+                {t('voice.recorder.record')}
               </Button>
               {streaming ? (
-                <Button onClick={stopStream} variant="outline">Stop</Button>
+                <Button onClick={stopStream} variant="outline">{t('voice.recorder.stop')}</Button>
               ) : (
                 <Button onClick={handleStop} disabled={!recording} variant="outline">
-                  {recording ? <><LoadingSpinner size={4} /> Stop</> : 'Stop'}
+                  {recording ? <><LoadingSpinner size={4} /> {t('voice.recorder.stopping')}</> : t('voice.recorder.stop')}
                 </Button>
               )}
             </div>
@@ -115,10 +115,10 @@ export default function VoicePage() {
 
         <div className="grid gap-0 divide-y xl:grid-cols-[minmax(0,1fr)_420px] xl:divide-x xl:divide-y-0">
           <div className="p-6">
-            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground font-display mb-3">Context</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground font-display mb-3">{t('voice.context.title')}</h3>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              <Badge variant={hasSelectedFiles ? 'success' : 'warning'}>{selectedFileIds.length} selected files</Badge>
-              {isLoadingFiles && <span className="text-sm text-muted-foreground">Loading...</span>}
+              <Badge variant={hasSelectedFiles ? 'success' : 'warning'}>{t('voice.context.selectedFiles', { count: selectedFileIds.length })}</Badge>
+              {isLoadingFiles && <span className="text-sm text-muted-foreground">{t('voice.context.loading')}</span>}
             </div>
             {selectedFiles.length > 0 ? (
               <div className="divide-y rounded-md border">
@@ -128,51 +128,51 @@ export default function VoicePage() {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Select files before recording. <Link to={`/projects/${activeProjectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">Open files</Link>
+                {t('voice.context.selectBeforeRecording')} <Link to={`/projects/${activeProjectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">{t('voice.context.openFiles')}</Link>
               </p>
             )}
             {lastBlobUrl && (
               <div className="mt-4 space-y-2">
-                <Badge variant="secondary">Last recording</Badge>
-                <audio src={lastBlobUrl} controls className="w-full" aria-label="Last recorded question" />
+                <Badge variant="secondary">{t('voice.context.lastRecording')}</Badge>
+                <audio src={lastBlobUrl} controls className="w-full" aria-label={t('voice.context.lastRecording')} />
               </div>
             )}
           </div>
 
           <div className="p-6">
-            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground font-display mb-3">Transcript</h3>
+            <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground font-display mb-3">{t('voice.transcript.title')}</h3>
             <div className="space-y-3">
               {streaming && !transcript && (
-                <div className="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground">Processing audio...</div>
+                <div className="rounded-md border bg-muted/20 p-3 text-sm text-muted-foreground">{t('voice.transcript.processing')}</div>
               )}
               {error && (
                 <div className="flex items-center justify-between gap-3 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                   <span>{error}</span>
                   {failed && (
-                    <Button onClick={() => void retry()} variant="outline" className="shrink-0">Retry</Button>
+                    <Button onClick={() => void retry()} variant="outline" className="shrink-0">{t('common.retry')}</Button>
                   )}
                 </div>
               )}
               {transcript ? (
                 <div className="rounded-md border bg-muted/20 p-4 text-sm leading-relaxed">{transcript}</div>
               ) : (
-                !streaming && <EmptyState title="No transcript yet" description="Record a question to see what was heard." className="p-4" />
+                !streaming && <EmptyState title={t('voice.transcript.empty')} description={t('voice.transcript.emptyDescription')} className="p-4" />
               )}
             </div>
           </div>
         </div>
       </div>
 
-      <AppCard title="Answer">
+      <AppCard title={t('voice.answer.title')}>
         {answer ? (
           <div className="rounded-md border bg-muted/20 p-4 text-sm leading-relaxed">
             {answer}
-            {streaming && <span className="ml-0.5 inline-block h-4 w-2 animate-pulse-soft bg-primary/60 align-middle" />}
+            {streaming && <span className="ms-0.5 inline-block h-4 w-2 animate-pulse-soft bg-primary/60 align-middle" />}
           </div>
         ) : streaming ? (
-          <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">Generating answer...</div>
+          <div className="rounded-md border bg-muted/20 p-4 text-sm text-muted-foreground">{t('voice.answer.generating')}</div>
         ) : (
-          <EmptyState title="No answer generated yet" description="Record a question to hear a grounded spoken answer." />
+          <EmptyState title={t('voice.answer.empty')} description={t('voice.answer.emptyDescription')} />
         )}
       </AppCard>
     </div>

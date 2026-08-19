@@ -54,9 +54,13 @@
 
 	body {
 		@apply bg-background text-foreground antialiased;
-		font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+		font-family: 'Manrope', 'Noto Sans Arabic', ui-sans-serif, system-ui, sans-serif;
 		font-feature-settings: "cv02", "cv03", "cv04", "cv05";
 		letter-spacing: -0.011em;
+	}
+
+	[dir="rtl"] body {
+		letter-spacing: 0;
 	}
 
 	button, input, textarea, select { font: inherit; }
@@ -71,18 +75,24 @@
 	.page-header { @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between; }
 	.page-kicker {
 		@apply text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground;
-		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-family: 'Space Grotesk', 'Noto Sans Arabic', ui-sans-serif, system-ui, sans-serif;
 	}
 	.page-title {
 		@apply text-3xl font-bold tracking-tight text-foreground sm:text-4xl;
-		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-family: 'Space Grotesk', 'Noto Sans Arabic', ui-sans-serif, system-ui, sans-serif;
 		letter-spacing: -0.03em;
+	}
+	[dir="rtl"] .page-title {
+		letter-spacing: 0;
 	}
 	.page-description { @apply max-w-2xl text-sm leading-6 text-muted-foreground; }
 	.field-label {
 		@apply text-sm font-semibold text-foreground;
-		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-family: 'Space Grotesk', 'Noto Sans Arabic', ui-sans-serif, system-ui, sans-serif;
 		letter-spacing: -0.01em;
+	}
+	[dir="rtl"] .field-label {
+		letter-spacing: 0;
 	}
 	.field-hint { @apply text-xs leading-5 text-muted-foreground; }
 	.log-panel { @apply max-h-64 space-y-2 overflow-y-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-5 text-muted-foreground; }
@@ -102,11 +112,20 @@
 
 @layer utilities {
 	.font-display {
-		font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+		font-family: 'Space Grotesk', 'Noto Sans Arabic', ui-sans-serif, system-ui, sans-serif;
 		letter-spacing: -0.03em;
+	}
+
+	[dir="rtl"] .font-display {
+		letter-spacing: 0;
 	}
 
 	.text-balance {
 		text-wrap: balance;
 	}
+
+	.logical-ms { margin-inline-start: var(--tw-ms, 0); }
+	.logical-me { margin-inline-end: var(--tw-me, 0); }
+	.logical-ps { padding-inline-start: var(--tw-ps, 0); }
+	.logical-pe { padding-inline-end: var(--tw-pe, 0); }
 }

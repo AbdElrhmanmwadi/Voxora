@@ -13,6 +13,7 @@ import EmptyState from '../../../core/ui/EmptyState'
 import { toast } from '../../../core/ui/toast'
 import FeedbackButtons from '../../feedback/components/FeedbackButtons'
 import VoiceRecordButton from '../../voice/components/VoiceRecordButton'
+import { useI18n } from '../../../core/i18n'
 import type { SearchResultItem } from '../../../types/api.types'
 
 function sourceFrom(meta: SearchResultItem['meta_data']) {
@@ -32,6 +33,7 @@ export default function AskPage() {
   const [limit, setLimit] = useState(5)
   const { results, answer, askedQuestion, loading, error, search, ask } = useRagStore()
   const { files, selectedFileIds, isLoadingFiles, loadFiles } = useFilesStore()
+  const { t } = useI18n()
 
   const selectedFiles = useMemo(
     () => files.filter((file) => selectedFileIds.includes(file.file_id)),
@@ -47,24 +49,24 @@ export default function AskPage() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <p className="page-kicker">Retrieval</p>
-          <h1 className="page-title">Ask AI</h1>
-          <p className="page-description">Search or answer using only the selected files in this project.</p>
+          <p className="page-kicker">{t('ask.page.kicker')}</p>
+          <h1 className="page-title">{t('ask.page.title')}</h1>
+          <p className="page-description">{t('ask.page.description')}</p>
         </div>
-        <Badge variant="secondary">{results.length} results</Badge>
+        <Badge variant="secondary">{t('ask.page.results', { count: results.length })}</Badge>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-6">
-          <AppCard title="Question">
+          <AppCard title={t('ask.question.title')}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="field-label" htmlFor="question">Prompt</label>
-                <Textarea id="question" value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask a question about this project's indexed content..." />
+                <label className="field-label" htmlFor="question">{t('ask.question.prompt')}</label>
+                <Textarea id="question" value={text} onChange={(e) => setText(e.target.value)} placeholder={t('ask.question.placeholder')} />
               </div>
               <div className="grid gap-4 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-end">
                 <div className="space-y-2">
-                  <label className="field-label" htmlFor="limit">Result limit</label>
+                  <label className="field-label" htmlFor="limit">{t('ask.question.resultLimit')}</label>
                   <Input id="limit" type="number" min={1} value={limit} onChange={(e) => setLimit(Number(e.target.value))} />
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
@@ -72,22 +74,22 @@ export default function AskPage() {
                     disabled={loading}
                     onTranscript={(transcript) => {
                       setText(transcript)
-                      toast.success('Voice question added')
+                      toast.success(t('ask.voice.added'))
                     }}
                     onError={(message) => toast.error(message)}
                   />
                   <Button onClick={() => search(activeProjectId, text, limit, selectedFileIds)} disabled={loading || !canRun}>
-                    {loading ? <><LoadingSpinner size={4} /> Searching</> : 'Search'}
+                    {loading ? <><LoadingSpinner size={4} /> {t('ask.question.searching')}</> : t('ask.question.search')}
                   </Button>
                   <Button onClick={() => ask(activeProjectId, text, limit, selectedFileIds)} disabled={loading || !canRun} variant="outline">
-                    {loading ? <><LoadingSpinner size={4} /> Asking</> : 'Ask AI'}
+                    {loading ? <><LoadingSpinner size={4} /> {t('ask.question.asking')}</> : t('ask.question.askAI')}
                   </Button>
                 </div>
               </div>
             </div>
           </AppCard>
 
-          <AppCard title="Search results">
+          <AppCard title={t('ask.results.title')}>
             <div className="space-y-3">
               {error && <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
               {loading && (
@@ -97,7 +99,7 @@ export default function AskPage() {
                 </div>
               )}
               {!loading && results.length === 0 && (
-                <EmptyState title="No results yet" description="Run a search to inspect the matching context from your selected files." />
+                <EmptyState title={t('ask.results.empty')} description={t('ask.results.emptyDescription')} />
               )}
               <div className="space-y-3">
                 {results.map((r, i) => {
@@ -107,8 +109,8 @@ export default function AskPage() {
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <Badge variant="default">#{i + 1}</Badge>
                         {file && <Badge variant="outline" className="max-w-full truncate">{file}</Badge>}
-                        {page && <Badge variant="outline">p. {page}</Badge>}
-                        <Badge variant="outline" className="ml-auto">Score {typeof r.score === 'number' ? r.score.toFixed(3) : r.score}</Badge>
+                        {page && <Badge variant="outline">{t('ask.results.page', { page })}</Badge>}
+                        <Badge variant="outline" className="ms-auto">{t('ask.results.score', { score: typeof r.score === 'number' ? r.score.toFixed(3) : r.score })}</Badge>
                       </div>
                       <p className="text-sm leading-relaxed text-muted-foreground">{r.text}</p>
                     </div>
@@ -120,11 +122,11 @@ export default function AskPage() {
         </div>
 
         <div className="space-y-6">
-          <AppCard title="Context">
+          <AppCard title={t('ask.context.title')}>
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={selectedFileIds.length > 0 ? 'success' : 'warning'}>{selectedFileIds.length} selected</Badge>
-                {isLoadingFiles && <span className="text-sm text-muted-foreground">Loading...</span>}
+                <Badge variant={selectedFileIds.length > 0 ? 'success' : 'warning'}>{t('ask.context.selected', { count: selectedFileIds.length })}</Badge>
+                {isLoadingFiles && <span className="text-sm text-muted-foreground">{t('ask.context.loading')}</span>}
               </div>
               {selectedFiles.length > 0 ? (
                 <div className="divide-y rounded-md border">
@@ -137,29 +139,29 @@ export default function AskPage() {
                 </div>
               ) : (
                 <div className="rounded-md border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
-                  Select at least one file before asking. <Link to={`/projects/${activeProjectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">Open files</Link>
+                  {t('ask.context.empty')} <Link to={`/projects/${activeProjectId}/files`} className="font-semibold text-primary underline-offset-4 hover:underline">{t('ask.context.openFiles')}</Link>
                 </div>
               )}
             </div>
           </AppCard>
 
-          <AppCard title="Answer">
+          <AppCard title={t('ask.answer.title')}>
             {answer ? (
               <div className="space-y-3">
                 <div className="rounded-md border bg-muted/20 p-4 text-sm leading-relaxed">{answer}</div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
-                    Grounded in {selectedFiles.length} selected {selectedFiles.length === 1 ? 'file' : 'files'}
-                    {selectedFiles.length > 0 && `: ${selectedFiles.map((f) => f.file_name).join(', ')}`}
+                    {t('ask.answer.grounded', { count: selectedFiles.length })}
+                    {selectedFiles.length > 0 && t('ask.answer.groundedList', { list: selectedFiles.map((f) => f.file_name).join(', ') })}
                   </p>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      void navigator.clipboard?.writeText(answer).then(() => toast.success('Answer copied'))
+                      void navigator.clipboard?.writeText(answer).then(() => toast.success(t('ask.answer.copied')))
                     }}
                   >
-                    Copy
+                    {t('ask.answer.copy')}
                   </Button>
                 </div>
                 <FeedbackButtons
@@ -169,7 +171,7 @@ export default function AskPage() {
                 />
               </div>
             ) : (
-              <EmptyState title="No answer generated yet" description="Ask a question to generate a grounded answer." />
+              <EmptyState title={t('ask.answer.empty')} description={t('ask.answer.emptyDescription')} />
             )}
           </AppCard>
         </div>

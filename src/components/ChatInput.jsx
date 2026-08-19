@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import VoiceRecordButton from '../features/voice/components/VoiceRecordButton'
+import { useI18n } from '../core/i18n'
 
 const MAX_LEN = 8000
 
@@ -8,6 +9,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
   const [voiceError, setVoiceError] = useState(null)
   const taRef = useRef(null)
   const canSend = !disabled && !isStreaming
+  const { t } = useI18n()
 
   useEffect(() => {
     const el = taRef.current
@@ -58,7 +60,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask the agent..."
+          placeholder={t('agent.input.placeholder')}
           dir="auto"
           maxLength={MAX_LEN}
           className="flex-1 resize-none overflow-y-auto rounded-md border border-input bg-background p-2.5 text-sm text-foreground transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -67,7 +69,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
 
         {isStreaming ? (
           <button onClick={onStop} className="rounded-md bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90">
-            Stop
+            {t('agent.input.stop')}
           </button>
         ) : (
           <>
@@ -82,16 +84,16 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
               disabled={!canSend || !text.trim()}
               className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              Send
+              {t('agent.input.send')}
             </button>
           </>
         )}
       </div>
       <div className="mt-1.5 flex justify-between text-[11px] text-muted-foreground">
-        <span>Enter to send / Shift+Enter for new line</span>
+        <span>{t('agent.input.hint')}</span>
         {nearLimit && (
           <span className={text.length >= MAX_LEN ? 'text-destructive' : ''}>
-            {text.length}/{MAX_LEN}
+            {t('agent.input.charLimit', { current: text.length, max: MAX_LEN })}
           </span>
         )}
       </div>

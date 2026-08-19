@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { submitFeedback, type FeedbackRating } from '../api/feedbackApi'
 import { extractError } from '../../../core/api/apiException'
 import { toast } from '../../../core/ui/toast'
+import { useI18n } from '../../../core/i18n'
 import { cn } from '../../../core/utils/cn'
 
 interface FeedbackButtonsProps {
@@ -24,6 +25,7 @@ export default function FeedbackButtons({
   const [sending, setSending] = useState(false)
   const [showComment, setShowComment] = useState(false)
   const [comment, setComment] = useState('')
+  const { t } = useI18n()
 
   const canSubmit = Boolean(projectId && question.trim() && answer.trim())
   if (!canSubmit) return null
@@ -36,9 +38,9 @@ export default function FeedbackButtons({
       await submitFeedback(projectId, { question, answer, rating: value, sessionId, comment: note })
       setDone(true)
       setShowComment(false)
-      toast.success('Thanks for your feedback')
+      toast.success(t('feedback.thanks'))
     } catch (e) {
-      toast.error('Could not send feedback', extractError(e))
+      toast.error(t('feedback.failed'), extractError(e))
       setRating(null)
       if (value === -1) setShowComment(false)
     } finally {
@@ -46,7 +48,7 @@ export default function FeedbackButtons({
     }
   }
 
-  const thumb = (value: FeedbackRating, label: string, glyph: string, onClick: () => void) => {
+  const thumb = (value: FeedbackRating, labelKey: string, glyph: string, onClick: () => void) => {
     const isSelected = rating === value
     const isLoading = sending && rating === value
 
@@ -56,8 +58,8 @@ export default function FeedbackButtons({
         onClick={onClick}
         disabled={done || sending}
         aria-pressed={isSelected}
-        aria-label={label}
-        title={label}
+        aria-label={t(labelKey)}
+        title={t(labelKey)}
         className={cn(
           'relative rounded-md px-2 py-1 text-sm transition-all duration-150 hover:bg-muted disabled:cursor-default',
           isSelected
@@ -78,14 +80,14 @@ export default function FeedbackButtons({
   return (
     <div className={cn('mt-2', className)}>
       <div className="flex items-center gap-2">
-        {thumb(1, 'Helpful', '+1', () => void send(1, null))}
-        {thumb(-1, 'Not helpful', '-1', () => {
+        {thumb(1, 'feedback.helpful', '+1', () => void send(1, null))}
+        {thumb(-1, 'feedback.notHelpful', '-1', () => {
           setRating(-1)
           setShowComment(true)
         })}
         {done && (
           <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-            <span>&#10003;</span> Sent
+            <span>&#10003;</span> {t('feedback.sent')}
           </span>
         )}
       </div>
@@ -95,7 +97,7 @@ export default function FeedbackButtons({
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="What went wrong? (optional)"
+            placeholder={t('feedback.commentPlaceholder')}
             rows={2}
             dir="auto"
             className="w-full rounded-md border bg-background p-2 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -107,8 +109,8 @@ export default function FeedbackButtons({
               disabled={sending}
               className="relative rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-60"
             >
-              <span className={sending ? 'opacity-0' : 'opacity-100'}>Send feedback</span>
-              {sending && <span className="absolute inset-0 flex items-center justify-center">Sending...</span>}
+              <span className={sending ? 'opacity-0' : 'opacity-100'}>{t('feedback.sendFeedback')}</span>
+              {sending && <span className="absolute inset-0 flex items-center justify-center">{t('feedback.sending')}</span>}
             </button>
             <button
               type="button"
@@ -120,7 +122,7 @@ export default function FeedbackButtons({
               disabled={sending}
               className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
             >
-              Cancel
+              {t('feedback.cancel')}
             </button>
           </div>
         </div>
