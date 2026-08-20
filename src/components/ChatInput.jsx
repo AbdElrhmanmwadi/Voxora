@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import VoiceRecordButton from '../features/voice/components/VoiceRecordButton'
 import { useI18n } from '../core/i18n'
+import { VOICE_ENABLED } from '../core/config/features'
 
 const MAX_LEN = 8000
 
@@ -73,12 +74,12 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
           </button>
         ) : (
           <>
-            <VoiceRecordButton
+            {VOICE_ENABLED && <VoiceRecordButton
               disabled={!canSend}
               onTranscript={sendVoiceTranscript}
               onError={setVoiceError}
               className="h-[38px]"
-            />
+            />}
             <button
               onClick={submit}
               disabled={!canSend || !text.trim()}
@@ -97,7 +98,7 @@ export default function ChatInput({ onSend, disabled, isStreaming, onStop }) {
           </span>
         )}
       </div>
-      {voiceError && (
+      {VOICE_ENABLED && voiceError && (
         <div role="alert" className="mt-2 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
           {voiceError}
         </div>

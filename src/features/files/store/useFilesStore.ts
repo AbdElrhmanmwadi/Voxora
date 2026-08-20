@@ -3,7 +3,7 @@ import type { UploadResponse, ProcessResponse, ProjectFile } from '../../../type
 import * as api from '../api/filesApi'
 import { extractError } from '../../../core/api/apiException'
 import { toast } from '../../../core/ui/toast'
-import { saveProjectFileId } from '../fileIdStorage'
+import { getProjectFileId, saveProjectFileId } from '../fileIdStorage'
 import { ApiClientError } from '../../../core/api/axiosClient'
 
 interface ProcessOptions {
@@ -93,7 +93,13 @@ export const useFilesStore = create<FilesState>((set, get) => ({
       // If another loadFiles was started after this one, ignore this response
       if (lastLoadToken !== token) return
 
-      const selected = get().selectedFileIds.map((s) => String(s)).filter((id) => res.files.some((file) => String(file.file_id) === id))
+      const savedFileId = getProjectFileId(projectId)
+      const currentSelected = get().selectedFileIds.map((s) => String(s))
+      const selected = currentSelected.length > 0
+        ? currentSelected.filter((id) => res.files.some((file) => String(file.file_id) === id))
+        : res.files
+          .filter((file) => savedFileId && (String(file.file_id) === savedFileId || file.file_name === savedFileId))
+          .map((file) => String(file.file_id))
       // compute outbound ids (asset names) for selected ids
       const outbound = selected.map((id) => res.files.find((f) => String(f.file_id) === id)?.file_name ?? id)
       set({ files: res.files, selectedFileIds: selected, selectedFileOutboundIds: outbound })
@@ -163,7 +169,14 @@ export const useFilesStore = create<FilesState>((set, get) => ({
 
       const res: ProcessResponse = await api.processFile(projectId, coercedOpts)
       set({ logs: [JSON.stringify(res), ...get().logs] })
-      toast.success('File processed', `${res.inserted_chunks} chunks inserted`)
+      await get().loadFiles(projectId)
+      if (res.inserted_chunks === 0 || res.processed_files === 0) {
+        const msg = 'No chunks were created. The file content may be unavailable or unsupported by the processor.'
+        set({ error: msg })
+        toast.error('File was not indexed', msg)
+      } else {
+        toast.success('File processed', `${res.inserted_chunks} chunks inserted`)
+      }
     } catch (e) {
       const message = extractError(e)
       set({ error: message, logs: [String(e), ...get().logs] })

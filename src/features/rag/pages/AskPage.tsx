@@ -39,7 +39,7 @@ export default function AskPage() {
     () => files.filter((file) => selectedFileIds.includes(file.file_id)),
     [files, selectedFileIds]
   )
-  const canRun = Boolean(activeProjectId && text.trim() && selectedFileIds.length > 0)
+  const canRun = Boolean(activeProjectId && text.trim())
 
   useEffect(() => {
     if (activeProjectId) void loadFiles(activeProjectId)

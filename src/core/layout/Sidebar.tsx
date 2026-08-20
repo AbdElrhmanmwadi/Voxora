@@ -2,6 +2,7 @@ import React from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import { cn } from '../utils/cn'
 import { useI18n } from '../i18n'
+import { VOICE_ENABLED } from '../config/features'
 
 function NavItem({ to, children, end = false }: { to: string; children: React.ReactNode; end?: boolean }) {
   return (
@@ -39,7 +40,7 @@ export default function Sidebar() {
               <NavItem to={`${base}/ask`}>{t('layout.sidebar.askAI')}</NavItem>
               <NavItem to={`${base}/agent`}>{t('layout.sidebar.agentChat')}</NavItem>
               <NavItem to={`${base}/translate`}>{t('layout.sidebar.translate')}</NavItem>
-              <NavItem to={`${base}/voice`}>{t('layout.sidebar.voice')}</NavItem>
+              {VOICE_ENABLED && <NavItem to={`${base}/voice`}>{t('layout.sidebar.voice')}</NavItem>}
             </>
           ) : (
             <p className="px-3 py-2 text-xs leading-5 text-muted-foreground">{t('layout.sidebar.openProjectHint')}</p>

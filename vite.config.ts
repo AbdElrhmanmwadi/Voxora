@@ -11,12 +11,32 @@ export default defineConfig({
       // Only proxy API calls; let browser navigations render the React app.
       '/auth': {
         target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
         bypass: (req) => {
           if (req.headers.accept?.includes('text/html')) return '/index.html'
         }
       },
-      '/api/v1': 'http://localhost:8000',
-      '/translate': 'http://localhost:8000'
+      '/api/v1': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/docs': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/openapi.json': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/translate': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      }
     }
   }
 })

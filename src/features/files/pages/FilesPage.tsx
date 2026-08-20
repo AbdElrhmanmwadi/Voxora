@@ -10,6 +10,7 @@ import Progress from '../../../core/ui/Progress'
 import EmptyState from '../../../core/ui/EmptyState'
 import StatusBadge from '../../../core/components/StatusBadge'
 import { useI18n } from '../../../core/i18n'
+import { validateUploadFile } from '../api/filesApi'
 
 function formatFileSize(size: number, t: (key: string) => string) {
   if (!Number.isFinite(size) || size <= 0) return `0 ${t('files.size.B')}`
@@ -27,6 +28,7 @@ export default function FilesPage() {
   const { projectId } = useParams()
   const activeProjectId = projectId ?? ''
   const [selected, setSelected] = useState<File | null>(null)
+  const [fileValidationError, setFileValidationError] = useState<string | null>(null)
   const [chunkSize, setChunkSize] = useState(500)
   const [overlap, setOverlap] = useState(50)
   const [doReset, setDoReset] = useState(false)
@@ -141,7 +143,11 @@ export default function FilesPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="field-label" htmlFor="asset-file">{t('files.upload.label')}</label>
-                <Input id="asset-file" type="file" accept=".txt,.md,.pdf,.docx,.csv,.html" onChange={(e) => setSelected(e.target.files?.[0] ?? null)} />
+                <Input id="asset-file" type="file" accept=".txt,.md,.pdf,.docx,.csv,.html" onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null
+                  setSelected(file)
+                  setFileValidationError(file ? validateUploadFile(file) : null)
+                }} />
                 <p className="field-hint">{t('files.upload.hint')}</p>
               </div>
               {selected && (
@@ -150,7 +156,8 @@ export default function FilesPage() {
                   <span className="font-medium">{selected.name}</span>
                 </div>
               )}
-              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || isUploading || !activeProjectId}>
+              {fileValidationError && <p role="alert" className="text-sm text-destructive">{fileValidationError}</p>}
+              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || Boolean(fileValidationError) || isUploading || !activeProjectId}>
                 {isUploading ? <><LoadingSpinner size={4} /> {t('files.upload.uploading')}</> : t('files.upload.submit')}
               </Button>
               {isUploading && uploadProgress !== null && (

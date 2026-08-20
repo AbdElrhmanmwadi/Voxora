@@ -11,6 +11,7 @@ import {
   rememberProject,
   type RecentProject
 } from '../recentProjects'
+import { listProjects } from '../api/projectsApi'
 
 function relativeTime(ts: number, t: (key: string, params?: Record<string, string | number>) => string) {
   const diff = Date.now() - ts
@@ -33,6 +34,21 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     setProjects(listRecentProjects())
+    void listProjects().then((remoteProjects) => {
+      const local = listRecentProjects()
+      const normalized = remoteProjects.flatMap((project) => {
+        const id = project.project_id ?? project.id
+        return id == null ? [] : [{ id: String(id), name: project.name || project.title || `Project ${id}`, lastOpenedAt: Date.now() }]
+      })
+      // Preserve local names and opening times where they already exist.
+      const merged = [...local]
+      for (const remote of normalized) {
+        if (!merged.some((project) => project.id === remote.id)) merged.push(remote)
+      }
+      setProjects(merged)
+    }).catch(() => {
+      // The usable local project registry remains available if listing is unavailable.
+    })
   }, [])
 
   function open(id: string, friendlyName?: string) {

@@ -1,4 +1,4 @@
-import axiosClient from '../core/api/axiosClient'
+import axiosClient, { refreshAccessToken, toApiError } from '../core/api/axiosClient'
 import { getAccessToken } from '../core/auth/authStorage'
 
 // Shared client: attaches the bearer token, refreshes it on 401, and
@@ -14,30 +14,36 @@ export async function chatWithAgent(projectId, message, sessionId) {
 // Streaming chat over SSE (see rag-knowledge-engine/docs/agent-streaming-frontend-prompt.md).
 // Native EventSource cannot POST a body or send Authorization, so the stream
 // is read from fetch. Events: meta (once, first) -> delta (0..n) -> done | error.
+export function parseSseBlock(block) {
+  let event = ''
+  const data = []
+  for (const rawLine of block.replace(/\r/g, '').split('\n')) {
+    if (rawLine.startsWith('event:')) event = rawLine.slice(6).trim()
+    else if (rawLine.startsWith('data:')) data.push(rawLine.slice(5).trimStart())
+  }
+  if (!data.length) return null
+  try { return { event, payload: JSON.parse(data.join('\n')) } } catch { return null }
+}
+
 export async function streamChat(projectId, { message, sessionId, limit }, handlers, signal) {
-  const base = axiosClient.defaults.baseURL || ''
   const body = { message, stream: true }
   if (sessionId) body.session_id = sessionId
   if (limit) body.limit = limit
 
-  const res = await fetch(`${base}/api/v1/agent/chat/${projectId}`, {
+  const request = (accessToken) => fetch(`/api/v1/agent/chat/${projectId}`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${getAccessToken() || ''}`,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
     signal,
   })
+  let res = await request(getAccessToken())
 
   if (res.status === 401) {
-    // Expired access token: fetch bypasses the axios interceptors, so route
-    // this one message through axios (which refreshes and retries). The
-    // answer arrives non-streamed this once; the next message streams again.
-    const data = await chatWithAgent(projectId, message, sessionId)
-    handlers.onMeta({ session_id: data.session_id, sources: data.sources || [], tool_trace: data.tool_trace || [] })
-    handlers.onDone(data.answer || '')
-    return
+    try { res = await request(await refreshAccessToken()) }
+    catch (error) { throw toApiError(error) }
   }
 
   const contentType = res.headers.get('content-type') || ''
@@ -68,20 +74,9 @@ export async function streamChat(projectId, { message, sessionId, limit }, handl
       const block = buffer.slice(0, sep)
       buffer = buffer.slice(sep + 2)
 
-      let event = ''
-      let data = ''
-      for (const line of block.split('\n')) {
-        if (line.startsWith('event: ')) event = line.slice(7).trim()
-        else if (line.startsWith('data: ')) data = line.slice(6)
-      }
-      if (!data) continue
-
-      let payload
-      try {
-        payload = JSON.parse(data)
-      } catch {
-        continue
-      }
+      const parsed = parseSseBlock(block)
+      if (!parsed) continue
+      const { event, payload } = parsed
 
       if (event === 'meta') handlers.onMeta(payload)
       else if (event === 'delta') handlers.onDelta(payload.text || '')

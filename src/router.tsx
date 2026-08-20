@@ -1,5 +1,5 @@
 import React from 'react'
-import { createBrowserRouter, useParams } from 'react-router-dom'
+import { createBrowserRouter, Navigate, useParams } from 'react-router-dom'
 import ProjectsPage from './features/projects/pages/ProjectsPage'
 import ProjectDashboardPage from './features/projects/pages/ProjectDashboardPage'
 import FilesPage from './features/files/pages/FilesPage'
@@ -14,6 +14,7 @@ import VerifyEmailPage from './features/auth/pages/VerifyEmailPage'
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage'
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage'
 import AgentChat from './components/AgentChat'
+import { VOICE_ENABLED } from './core/config/features'
 
 function protectedPage(page: React.ReactNode) {
   return (
@@ -46,7 +47,7 @@ const router = createBrowserRouter([
     ),
   },
   { path: '/projects/:projectId/translate', element: protectedPage(<TranslatePage />) },
-  { path: '/projects/:projectId/voice', element: protectedPage(<VoicePage />) }
+  { path: '/projects/:projectId/voice', element: protectedPage(VOICE_ENABLED ? <VoicePage /> : <Navigate to="../ask" replace />) }
 ])
 
 export default router

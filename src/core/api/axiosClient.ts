@@ -19,22 +19,7 @@ export class ApiClientError extends Error {
   }
 }
 
-function getApiBaseUrl() {
-  const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim()
-
-  if (import.meta.env.PROD && (!rawBaseUrl || rawBaseUrl === '/')) {
-    throw new Error('VITE_API_BASE_URL must be set to the deployed backend URL in production.')
-  }
-
-  if (!rawBaseUrl || rawBaseUrl === '/') return ''
-
-  return rawBaseUrl.replace(/\/$/, '')
-}
-
-const API_BASE_URL = getApiBaseUrl()
-
 const axiosClient = axios.create({
-  baseURL: API_BASE_URL || undefined,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -49,22 +34,30 @@ function isAuthEndpoint(url?: string) {
   )
 }
 
-function toApiError(error: unknown) {
+export function toApiError(error: unknown) {
   if (error instanceof AxiosError) {
     const data = error.response?.data
+    const status = error.response?.status
     let message = error.message || 'Unknown error'
+    if (!error.response) message = 'Unable to reach the server. Please check your connection and try again.'
+    else if (status === 403) message = 'You do not have access to this project.'
+    else if (status === 413) message = 'The uploaded file exceeds the allowed size.'
+    else if (status && status >= 500) message = 'The server is temporarily unavailable. Please try again.'
     if (data) {
-      if (typeof data.detail === 'string') message = data.detail
-      else if (typeof data.message === 'string') message = data.message
-      else {
-        try {
+      const useBackendMessage = status !== 403 && status !== 413 && (!status || status < 500)
+      if (useBackendMessage) {
+        if (typeof data.detail === 'string') message = data.detail
+        else if (typeof data.message === 'string') message = data.message
+        else {
+          try {
           message = JSON.stringify(data)
-        } catch {
+          } catch {
           message = String(data)
+          }
         }
       }
     }
-    return new ApiClientError(message, error.response?.status, data)
+    return new ApiClientError(message, status, data)
   }
   if (error instanceof Error) return error
   return new Error('Unknown error')
@@ -82,11 +75,12 @@ axiosClient.interceptors.request.use((config) => {
 // refresh token is never consumed twice (which would invalidate the session).
 let refreshPromise: Promise<string> | null = null
 
-async function refreshAccessToken(refreshToken: string): Promise<string> {
+export async function refreshAccessToken(refreshToken = getRefreshToken()): Promise<string> {
+  if (!refreshToken) throw new ApiClientError('Your session has expired. Please sign in again.', 401)
   if (!refreshPromise) {
     refreshPromise = axios
       .post(
-        `${API_BASE_URL}/auth/refresh`,
+        '/auth/refresh',
         { refresh_token: refreshToken },
         { headers: { 'Content-Type': 'application/json' } }
       )

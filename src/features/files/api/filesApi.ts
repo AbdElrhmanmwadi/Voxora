@@ -1,6 +1,16 @@
 import axiosClient from '../../../core/api/axiosClient'
 import type { UploadResponse, ProcessResponse, IndexPushResponse, FileListResponse } from '../../../types/api.types'
 
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+const ACCEPTED_FILE_TYPES = new Set(['txt', 'md', 'pdf', 'docx', 'csv', 'html'])
+
+export function validateUploadFile(file: File): string | null {
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  if (!extension || !ACCEPTED_FILE_TYPES.has(extension)) return 'This file type is not supported. Choose TXT, MD, PDF, DOCX, CSV, or HTML.'
+  if (file.size > MAX_UPLOAD_BYTES) return 'The uploaded file exceeds the allowed size (25 MB).'
+  return null
+}
+
 export async function listFiles(projectId: string): Promise<FileListResponse> {
   const res = await axiosClient.get(`/api/v1/data/files/${projectId}`)
   return res.data as FileListResponse
@@ -11,6 +21,8 @@ export async function uploadFile(
   file: File,
   onProgress?: (percent: number) => void
 ): Promise<UploadResponse> {
+  const validationError = validateUploadFile(file)
+  if (validationError) throw new Error(validationError)
   const fd = new FormData()
   fd.append('file', file)
   const res = await axiosClient.post(`/api/v1/data/upload/${projectId}`, fd, {
