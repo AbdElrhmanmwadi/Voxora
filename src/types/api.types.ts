@@ -65,7 +65,7 @@ export interface FeedbackAnalyticsResponse {
 
 export interface TranslationJobCreateResponse {
   signal: string;
-  job_id: string;
+  job_id: string | number;
   status: string;
   asset_id: string;
   source_lang: string;
@@ -75,8 +75,14 @@ export interface TranslationJobCreateResponse {
 export interface TranslationJobStatusResponse {
   signal: string;
   job: {
-    job_id: string;
+    job_id: string | number;
     status: string;
+    progress?: number;
+    asset_id?: string;
+    source_lang?: string;
+    target_lang?: string;
+    created_at?: string;
+    updated_at?: string;
     result_file_id?: string;
     error_message?: string;
   };

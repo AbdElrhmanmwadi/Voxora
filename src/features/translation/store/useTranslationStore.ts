@@ -59,8 +59,9 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
       }
       const outboundFileId = matchedFile.file_name ?? coercedFileIdInput
       const res = await api.createTranslation(projectId, String(outboundFileId), source, target)
-      set({ jobId: res.job_id, status: res.status, resultFileId: null })
-      persistTranslationJob(projectId, res.job_id, res.status)
+      const createdJobId = String(res.job_id)
+      set({ jobId: createdJobId, status: res.status, resultFileId: res.asset_id ?? null })
+      persistTranslationJob(projectId, createdJobId, res.status)
     } catch (e) {
       set({ error: extractError(e as unknown) })
     } finally {
@@ -74,7 +75,7 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
       const res = await api.getTranslationStatus(jobId)
       set({
         status: res.job.status,
-        resultFileId: res.job.result_file_id ?? null,
+        resultFileId: res.job.result_file_id ?? res.job.asset_id ?? null,
         jobErrorMessage: res.job.error_message ?? null
       })
     } catch (e) {

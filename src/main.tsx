@@ -8,25 +8,35 @@ import { AuthProvider } from './core/auth/AuthContext'
 import { I18nProvider } from './core/i18n/I18nContext'
 import { ThemeProvider } from './core/i18n/ThemeContext'
 import Toaster from './core/ui/Toaster'
+import { useI18n } from './core/i18n'
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
 
-function Main() {
+function App() {
+  const { language } = useI18n()
   const app = (
     <AuthProvider>
-      <I18nProvider>
-        <ThemeProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </ThemeProvider>
-      </I18nProvider>
+      <ThemeProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </ThemeProvider>
     </AuthProvider>
   )
 
   return googleClientId ? (
-    <GoogleOAuthProvider clientId={googleClientId}>{app}</GoogleOAuthProvider>
+    <GoogleOAuthProvider key={language} clientId={googleClientId} locale={language}>
+      {app}
+    </GoogleOAuthProvider>
   ) : (
     app
+  )
+}
+
+function Main() {
+  return (
+    <I18nProvider>
+      <App />
+    </I18nProvider>
   )
 }
 

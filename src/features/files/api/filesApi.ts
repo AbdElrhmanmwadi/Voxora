@@ -35,12 +35,12 @@ export async function uploadFile(
 }
 
 export async function processFile(projectId: string, payload: { file_id: string; chunk_size?: number; overlap_size?: number; do_reset?: boolean }): Promise<ProcessResponse> {
-  const res = await axiosClient.post(`/api/v1/data/process/${projectId}`, payload)
+  const res = await axiosClient.post(`/api/v1/data/process/${projectId}`, { ...payload, do_reset: payload.do_reset ? 1 : 0 })
   return res.data as ProcessResponse
 }
 
 export async function pushIndex(projectId: string, do_reset = false): Promise<IndexPushResponse> {
-  const res = await axiosClient.post(`/api/v1/nlp/index/push/${projectId}`, { do_reset })
+  const res = await axiosClient.post(`/api/v1/nlp/index/push/${projectId}`, { do_reset: do_reset ? 1 : 0 })
   return res.data as IndexPushResponse
 }
 

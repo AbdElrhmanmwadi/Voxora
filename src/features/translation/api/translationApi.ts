@@ -16,7 +16,9 @@ async function messageFromBlobError(error: AxiosError<Blob>) {
 }
 
 export async function createTranslation(project_id: string, file_id: string, source_lang: string, target_lang: string) {
-  const res = await axiosClient.post(`/translate/file`, { project_id, file_id, source_lang, target_lang })
+  const numericProjectId = Number(project_id)
+  if (!Number.isInteger(numericProjectId)) throw new Error('Invalid project ID.')
+  const res = await axiosClient.post(`/translate/file`, { project_id: numericProjectId, file_id, source_lang, target_lang })
   return res.data as TranslationJobCreateResponse
 }
 
