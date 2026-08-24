@@ -61,6 +61,8 @@ export default function FilesPage() {
     [files, selectedFileIds]
   )
   const processingFileId = selectedFileOutboundIds[0] ?? selectedFileIds[0] ?? fileId
+  const pipelineActive = isUploading || isProcessing || isIndexing
+  const pipelineStage = isProcessing ? 'processing' : isIndexing ? 'indexing' : isUploading ? 'uploading' : null
 
   useEffect(() => {
     if (activeProjectId) void loadFiles(activeProjectId)
@@ -157,9 +159,26 @@ export default function FilesPage() {
                 </div>
               )}
               {fileValidationError && <p role="alert" className="text-sm text-destructive">{fileValidationError}</p>}
-              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || Boolean(fileValidationError) || isUploading || isProcessing || isIndexing || !activeProjectId}>
-                {isUploading ? <><LoadingSpinner size={4} /> {t('files.upload.uploading')}</> : t('files.upload.submit')}
+              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || Boolean(fileValidationError) || pipelineActive || !activeProjectId}>
+                {pipelineActive ? <><LoadingSpinner size={4} /> {t(`files.upload.${pipelineStage}`)}</> : t('files.upload.submit')}
               </Button>
+              {pipelineActive && (
+                <div className="space-y-3 rounded-md border bg-muted/20 p-4" aria-live="polite">
+                  <p className="text-sm font-semibold">{t('files.upload.pipelineTitle')}</p>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {(['uploading', 'processing', 'indexing'] as const).map((stage, index) => {
+                      const active = pipelineStage === stage
+                      const complete = pipelineStage ? index < ['uploading', 'processing', 'indexing'].indexOf(pipelineStage) : false
+                      return (
+                        <div key={stage} className={`rounded-md border px-3 py-2 text-sm ${active ? 'border-primary bg-primary/10 font-semibold' : complete ? 'border-success/40 bg-success/10' : 'text-muted-foreground'}`}>
+                          <span className="mr-2">{complete ? '✓' : index + 1}</span>
+                          {t(`files.upload.${stage}`)}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               {isUploading && uploadProgress !== null && (
                 <div className="space-y-2" aria-live="polite">
                   <Progress value={uploadProgress} aria-label="Upload progress" />
@@ -168,74 +187,70 @@ export default function FilesPage() {
                   </p>
                 </div>
               )}
-              {(isProcessing || isIndexing) && (
-                <p className="field-hint" aria-live="polite">
-                  {isProcessing ? t('files.upload.processing') : t('files.upload.indexing')}
-                </p>
-              )}
+              {!pipelineActive && files.length > 0 && <p className="field-hint">{t('files.upload.ready')}</p>}
             </div>
           </AppCard>
 
-          <AppCard title={t('files.process.title')}>
+          <AppCard title={t('files.process.advancedTitle')}>
             <div className="space-y-4">
-              <div className="flex flex-col gap-2 rounded-md border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-sm text-muted-foreground">{t('files.process.fileToProcess')}</span>
-                <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{processingFileId ?? t('files.process.selectFile')}</code>
-              </div>
-              {processingFileId && (
-                <Link
-                  to={`/projects/${activeProjectId}/translate?fileId=${encodeURIComponent(processingFileId)}`}
-                  className="inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
-                >
-                  {t('files.process.translateFile')}
-                </Link>
-              )}
-
               <Button variant="outline" size="sm" onClick={() => setShowAdvanced((s) => !s)}>
                 {showAdvanced ? t('files.process.hideAdvanced') : t('files.process.showAdvanced')}
               </Button>
 
               {showAdvanced && (
-                <div className="grid gap-4 rounded-md border bg-muted/10 p-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="field-label" htmlFor="chunk-size">{t('files.process.chunkSize')}</label>
-                    <Input id="chunk-size" type="number" min={1} value={chunkSize} onChange={(e) => setChunkSize(Number(e.target.value))} />
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-2 rounded-md border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm text-muted-foreground">{t('files.process.fileToProcess')}</span>
+                    <code className="break-all rounded bg-background px-2 py-1 font-mono text-xs">{processingFileId ?? t('files.process.selectFile')}</code>
                   </div>
-                  <div className="space-y-2">
-                    <label className="field-label" htmlFor="overlap">{t('files.process.overlap')}</label>
-                    <Input id="overlap" type="number" min={0} value={overlap} onChange={(e) => setOverlap(Number(e.target.value))} />
+                  {processingFileId && (
+                    <Link
+                      to={`/projects/${activeProjectId}/translate?fileId=${encodeURIComponent(processingFileId)}`}
+                      className="inline-block text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                    >
+                      {t('files.process.translateFile')}
+                    </Link>
+                  )}
+                  <div className="grid gap-4 rounded-md border bg-muted/10 p-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="field-label" htmlFor="chunk-size">{t('files.process.chunkSize')}</label>
+                      <Input id="chunk-size" type="number" min={1} value={chunkSize} onChange={(e) => setChunkSize(Number(e.target.value))} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="field-label" htmlFor="overlap">{t('files.process.overlap')}</label>
+                      <Input id="overlap" type="number" min={0} value={overlap} onChange={(e) => setOverlap(Number(e.target.value))} />
+                    </div>
+                    <label className="flex min-h-10 items-center gap-2 text-sm font-medium sm:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={doReset}
+                        onChange={(e) => setDoReset(e.target.checked)}
+                        className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+                      />
+                      {t('files.process.resetIndex')}
+                    </label>
                   </div>
-                  <label className="flex min-h-10 items-center gap-2 text-sm font-medium sm:col-span-2">
-                    <input
-                      type="checkbox"
-                      checked={doReset}
-                      onChange={(e) => setDoReset(e.target.checked)}
-                      className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-                    />
-                    {t('files.process.resetIndex')}
-                  </label>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button
+                      onClick={() =>
+                        processFile(activeProjectId, {
+                          file_id: processingFileId || '',
+                          chunk_size: Number.isFinite(chunkSize) && chunkSize > 0 ? chunkSize : 500,
+                          overlap_size: Number.isFinite(overlap) && overlap >= 0 ? overlap : 0,
+                          do_reset: doReset
+                        })
+                      }
+                      disabled={!processingFileId || isUploading || isProcessing || isIndexing}
+                    >
+                      {isProcessing ? <><LoadingSpinner size={4} /> {t('files.process.processing')}</> : t('files.process.processFile')}
+                    </Button>
+                    <Button onClick={() => pushIndex(activeProjectId, doReset)} disabled={isUploading || isProcessing || isIndexing || !activeProjectId} variant="outline">
+                      {isIndexing ? <><LoadingSpinner size={4} /> {t('files.process.indexing')}</> : t('files.process.pushIndex')}
+                    </Button>
+                  </div>
                 </div>
               )}
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Button
-                  onClick={() =>
-                    processFile(activeProjectId, {
-                      file_id: processingFileId || '',
-                      chunk_size: Number.isFinite(chunkSize) && chunkSize > 0 ? chunkSize : 500,
-                      overlap_size: Number.isFinite(overlap) && overlap >= 0 ? overlap : 0,
-                      do_reset: doReset
-                    })
-                  }
-                  disabled={!processingFileId || isUploading || isProcessing || isIndexing}
-                >
-                  {isProcessing ? <><LoadingSpinner size={4} /> {t('files.process.processing')}</> : t('files.process.processFile')}
-                </Button>
-                <Button onClick={() => pushIndex(activeProjectId, doReset)} disabled={isUploading || isProcessing || isIndexing || !activeProjectId} variant="outline">
-                  {isIndexing ? <><LoadingSpinner size={4} /> {t('files.process.indexing')}</> : t('files.process.pushIndex')}
-                </Button>
-              </div>
-              {selectedFiles.length > 1 && (
+              {showAdvanced && selectedFiles.length > 1 && (
                 <p className="field-hint">{t('files.process.hint')}</p>
               )}
             </div>

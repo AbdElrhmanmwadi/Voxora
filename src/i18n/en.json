@@ -264,11 +264,14 @@
       "uploading": "Uploading",
       "uploadingProgress": "Uploading... {percent}%",
       "uploadComplete": "Upload complete — finalizing on server...",
+      "pipelineTitle": "Your file is being prepared automatically",
       "processing": "Processing the file...",
-      "indexing": "Adding the file to the search index..."
+      "indexing": "Adding the file to the search index...",
+      "ready": "Files are processed and ready to search."
     },
     "process": {
       "title": "Process and index",
+      "advancedTitle": "Advanced options",
       "fileToProcess": "File to process",
       "selectFile": "Select a project file",
       "translateFile": "Translate this file",
