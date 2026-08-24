@@ -157,7 +157,7 @@ export default function FilesPage() {
                 </div>
               )}
               {fileValidationError && <p role="alert" className="text-sm text-destructive">{fileValidationError}</p>}
-              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || Boolean(fileValidationError) || isUploading || !activeProjectId}>
+              <Button onClick={() => selected && uploadFile(activeProjectId, selected)} disabled={!selected || Boolean(fileValidationError) || isUploading || isProcessing || isIndexing || !activeProjectId}>
                 {isUploading ? <><LoadingSpinner size={4} /> {t('files.upload.uploading')}</> : t('files.upload.submit')}
               </Button>
               {isUploading && uploadProgress !== null && (
@@ -167,6 +167,11 @@ export default function FilesPage() {
                     {uploadProgress < 100 ? t('files.upload.uploadingProgress', { percent: uploadProgress }) : t('files.upload.uploadComplete')}
                   </p>
                 </div>
+              )}
+              {(isProcessing || isIndexing) && (
+                <p className="field-hint" aria-live="polite">
+                  {isProcessing ? t('files.upload.processing') : t('files.upload.indexing')}
+                </p>
               )}
             </div>
           </AppCard>
@@ -222,11 +227,11 @@ export default function FilesPage() {
                       do_reset: doReset
                     })
                   }
-                  disabled={!processingFileId || isProcessing}
+                  disabled={!processingFileId || isUploading || isProcessing || isIndexing}
                 >
                   {isProcessing ? <><LoadingSpinner size={4} /> {t('files.process.processing')}</> : t('files.process.processFile')}
                 </Button>
-                <Button onClick={() => pushIndex(activeProjectId, doReset)} disabled={isIndexing || !activeProjectId} variant="outline">
+                <Button onClick={() => pushIndex(activeProjectId, doReset)} disabled={isUploading || isProcessing || isIndexing || !activeProjectId} variant="outline">
                   {isIndexing ? <><LoadingSpinner size={4} /> {t('files.process.indexing')}</> : t('files.process.pushIndex')}
                 </Button>
               </div>

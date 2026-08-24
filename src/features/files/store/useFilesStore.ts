@@ -32,8 +32,8 @@ interface FilesState {
   setSelectedFileIds: (projectId: string, fileIds: string[]) => void
   clearSelectedFiles: (projectId: string) => void
   uploadFile: (projectId: string, file: File) => Promise<void>
-  processFile: (projectId: string, opts: ProcessOptions) => Promise<void>
-  pushIndex: (projectId: string, doReset?: boolean) => Promise<void>
+  processFile: (projectId: string, opts: ProcessOptions) => Promise<boolean>
+  pushIndex: (projectId: string, doReset?: boolean) => Promise<boolean>
 }
 
 // Token to ignore responses from loadFiles calls that were superseded.
@@ -141,7 +141,16 @@ export const useFilesStore = create<FilesState>((set, get) => ({
       // Clear any previous fileId from other projects
       set({ fileId: res.file_id, fileProjectId: projectId, logs: [JSON.stringify(res), ...get().logs] })
       await get().loadFiles(projectId)
-      toast.success('File uploaded', file.name)
+      const processed = await get().processFile(projectId, {
+        file_id: res.file_id,
+        chunk_size: 500,
+        overlap_size: 50,
+        do_reset: false
+      })
+      if (processed) {
+        const indexed = await get().pushIndex(projectId, false)
+        if (indexed) toast.success('File uploaded and indexed', file.name)
+      }
     } catch (e) {
       const message = extractError(e)
       set({ error: message, logs: [String(e), ...get().logs] })
@@ -164,7 +173,7 @@ export const useFilesStore = create<FilesState>((set, get) => ({
         const msg = `File ID not found: ${coercedOpts.file_id}`
         set({ error: msg, logs: [msg, ...get().logs] })
         toast.error('Cannot process file', msg)
-        return
+        return false
       }
 
       const res: ProcessResponse = await api.processFile(projectId, coercedOpts)
@@ -174,13 +183,16 @@ export const useFilesStore = create<FilesState>((set, get) => ({
         const msg = 'No chunks were created. The file content may be unavailable or unsupported by the processor.'
         set({ error: msg })
         toast.error('File was not indexed', msg)
+        return false
       } else {
         toast.success('File processed', `${res.inserted_chunks} chunks inserted`)
+        return true
       }
     } catch (e) {
       const message = extractError(e)
       set({ error: message, logs: [String(e), ...get().logs] })
       toast.error('Processing failed', message)
+      return false
     } finally {
       set({ isProcessing: false })
     }
@@ -191,10 +203,12 @@ export const useFilesStore = create<FilesState>((set, get) => ({
       const res = await api.pushIndex(projectId, doReset)
       set({ logs: [JSON.stringify(res), ...get().logs] })
       toast.success(doReset ? 'Index reset and rebuilt' : 'Index updated')
+      return true
     } catch (e) {
       const message = extractError(e)
       set({ error: message, logs: [String(e), ...get().logs] })
       toast.error('Indexing failed', message)
+      return false
     } finally {
       set({ isIndexing: false })
     }

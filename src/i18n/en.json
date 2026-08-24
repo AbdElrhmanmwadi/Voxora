@@ -263,7 +263,9 @@
       "submit": "Upload file",
       "uploading": "Uploading",
       "uploadingProgress": "Uploading... {percent}%",
-      "uploadComplete": "Upload complete — finalizing on server..."
+      "uploadComplete": "Upload complete — finalizing on server...",
+      "processing": "Processing the file...",
+      "indexing": "Adding the file to the search index..."
     },
     "process": {
       "title": "Process and index",
